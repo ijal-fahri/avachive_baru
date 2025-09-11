@@ -366,7 +366,7 @@
     <div class="ml-0 lg:ml-64 min-h-screen p-6">
         <div class="max-w-6xl mx-auto">
             <div
-                class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+                class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 justify-between items-center hidden md:flex">
                 <div class="flex items-center gap-4">
                     <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                         <i class="bi bi-list"></i>
@@ -386,11 +386,9 @@
                             <span>Profile</span>
                         </a>
                         <div class="border-t border-slate-200 my-1"></div>
-                        <!-- PERUBAHAN HTML 1: Memberi ID pada form -->
-                        <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                        <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <!-- PERUBAHAN HTML 2: Mengubah tipe button menjadi 'button' -->
-                            <button type="button" id="logout-button"
+                            <button type="submit" id="logout-button"
                                 class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                 <i class="bi bi-box-arrow-right"></i>
                                 <span>Logout</span>
@@ -403,30 +401,32 @@
             <div class="pt-20 lg:pt-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Data Order</h1>
-                    <p class="text-gray-600 mt-1">Daftar semua order pelanggan</p>
+                    <p class="text-gray-600 mt-1">Daftar semua order baru</p>
                 </div>
                 <div class="flex gap-3">
                     <form action="{{ route('kasir.dataorder.index') }}" method="GET" class="flex gap-3">
-    <div class="relative">
-        <input type="text" name="search" placeholder="Cari order..."
-            class="w-full md:w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value="{{ request('search') }}">
-        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-    </div>
-    
-    <!-- Dropdown untuk memilih jumlah data per halaman -->
-    <div class="perpage-selector">
-        <span class="perpage-label">Tampilkan:</span>
-        <select name="perPage" id="perPage" class="perpage-dropdown" onchange="this.form.submit()">
-            <option value="10" {{ request('perPage', 10) == 10 ? 'selected' : '' }}>10</option>
-            <option value="15" {{ request('perPage', 10) == 15 ? 'selected' : '' }}>15</option>
-            <option value="20" {{ request('perPage', 10) == 20 ? 'selected' : '' }}>20</option>
-            <option value="25" {{ request('perPage', 10) == 25 ? 'selected' : '' }}>25</option>
-            <option value="30" {{ request('perPage', 10) == 30 ? 'selected' : '' }}>30</option>
-            <option value="all" {{ request('perPage', 10) == 'all' ? 'selected' : '' }}>All</option>
-        </select>
-    </div>
-</form>
+                        <div class="relative">
+                            <input type="text" name="search" placeholder="Cari order..."
+                                class="w-full md:w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value="{{ request('search') }}">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+
+                        <!-- Dropdown untuk memilih jumlah data per halaman -->
+                        <div class="perpage-selector">
+                            <span class="perpage-label">Tampilkan:</span>
+                            <select name="perPage" id="perPage" class="perpage-dropdown"
+                                onchange="this.form.submit()">
+                                <option value="10" {{ request('perPage', 10) == 10 ? 'selected' : '' }}>10</option>
+                                <option value="15" {{ request('perPage', 10) == 15 ? 'selected' : '' }}>15</option>
+                                <option value="20" {{ request('perPage', 10) == 20 ? 'selected' : '' }}>20</option>
+                                <option value="25" {{ request('perPage', 10) == 25 ? 'selected' : '' }}>25</option>
+                                <option value="30" {{ request('perPage', 10) == 30 ? 'selected' : '' }}>30</option>
+                                <option value="all" {{ request('perPage', 10) == 'all' ? 'selected' : '' }}>All
+                                </option>
+                            </select>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -599,362 +599,363 @@
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    const statusCycle = {
-        'Diproses': {
-            next: 'Sudah Bisa Diambil',
-            class: 'status-processing'
-        },
-        'Sudah Bisa Diambil': {
-            next: 'Selesai',
-            class: 'status-pending'
-        },
-        'Selesai': {
-            next: 'Diproses',
-            class: 'status-completed'
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const statusCycle = {
+            'Diproses': {
+                next: 'Sudah Bisa Diambil',
+                class: 'status-processing'
+            },
+            'Sudah Bisa Diambil': {
+                next: 'Selesai',
+                class: 'status-pending'
+            },
+            'Selesai': {
+                next: 'Diproses',
+                class: 'status-completed'
+            }
+        };
+
+        const modal = document.getElementById('detailModal');
+        const detailContent = document.getElementById('detailContent');
+        const confirmModal = document.getElementById('confirmStatusModal');
+        const confirmContent = document.getElementById('confirmStatusContent');
+        const confirmBtn = document.getElementById('confirmStatusBtn');
+        const bayarModal = document.getElementById('bayarModal');
+        const bayarContent = document.getElementById('bayarContent');
+        let currentOrderId = null;
+        let nextStatus = null;
+        let currentStatus = null;
+        let currentOrderData = null;
+
+        // Fungsi untuk mempertahankan pilihan perPage
+        function initPerPageSelector() {
+            const perPageSelect = document.getElementById('perPage');
+            if (!perPageSelect) return;
+
+            // Load saved preference from localStorage
+            const savedPerPage = localStorage.getItem('perPage');
+            if (savedPerPage) {
+                perPageSelect.value = savedPerPage;
+            }
+
+            // Save preference when changed
+            perPageSelect.addEventListener('change', function() {
+                localStorage.setItem('perPage', this.value);
+                this.form.submit();
+            });
         }
-    };
 
-    const modal = document.getElementById('detailModal');
-    const detailContent = document.getElementById('detailContent');
-    const confirmModal = document.getElementById('confirmStatusModal');
-    const confirmContent = document.getElementById('confirmStatusContent');
-    const confirmBtn = document.getElementById('confirmStatusBtn');
-    const bayarModal = document.getElementById('bayarModal');
-    const bayarContent = document.getElementById('bayarContent');
-    let currentOrderId = null;
-    let nextStatus = null;
-    let currentStatus = null;
-    let currentOrderData = null;
-
-    // Fungsi untuk mempertahankan pilihan perPage
-    function initPerPageSelector() {
-        const perPageSelect = document.getElementById('perPage');
-        if (!perPageSelect) return;
-        
-        // Load saved preference from localStorage
-        const savedPerPage = localStorage.getItem('perPage');
-        if (savedPerPage) {
-            perPageSelect.value = savedPerPage;
+        function formatPhoneNumber(phoneNumber) {
+            const cleaned = ('' + phoneNumber).replace(/\D/g, '');
+            if (cleaned.length === 12 && cleaned.startsWith('628')) {
+                return cleaned.replace(/(\d{3})(\d{3})(\d{4})(\d{2})/, '+$1 $2-$3-$4');
+            } else if (cleaned.length === 11 && cleaned.startsWith('08')) {
+                return cleaned.replace(/(\d{2})(\d{3})(\d{4})(\d{2})/, '+62 $1 $2-$3-$4');
+            } else if (cleaned.length === 10 && cleaned.startsWith('8')) {
+                return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '+62 $1-$2-$3');
+            }
+            return phoneNumber;
         }
-        
-        // Save preference when changed
-        perPageSelect.addEventListener('change', function() {
-            localStorage.setItem('perPage', this.value);
-            this.form.submit();
-        });
-    }
 
-    function formatPhoneNumber(phoneNumber) {
-        const cleaned = ('' + phoneNumber).replace(/\D/g, '');
-        if (cleaned.length === 12 && cleaned.startsWith('628')) {
-            return cleaned.replace(/(\d{3})(\d{3})(\d{4})(\d{2})/, '+$1 $2-$3-$4');
-        } else if (cleaned.length === 11 && cleaned.startsWith('08')) {
-            return cleaned.replace(/(\d{2})(\d{3})(\d{4})(\d{2})/, '+62 $1 $2-$3-$4');
-        } else if (cleaned.length === 10 && cleaned.startsWith('8')) {
-            return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '+62 $1-$2-$3');
-        }
-        return phoneNumber;
-    }
-
-    function openWhatsApp(orderData) {
-        const cleanedPhone = ('' + orderData.pelanggan.no_handphone).replace(/\D/g, '');
-        let whatsappNumber = cleanedPhone.startsWith('0') ? '62' + cleanedPhone.substring(1) : cleanedPhone;
-        const layanan = JSON.parse(orderData.layanan);
-        const waktuOrder = new Date(orderData.created_at).toLocaleString('id-ID', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        const layananMessages = layanan.map(item => {
-            return `*Nama Layanan:* ${item.nama}\n*Kategori:* Satuan\n*Harga:* Rp ${parseInt(item.harga).toLocaleString('id-ID')}\n*Jumlah:* ${item.kuantitas}\n*Subtotal:* Rp ${(item.harga * item.kuantitas).toLocaleString('id-ID')}`;
-        });
-        const layananMessage = layananMessages.join('\n----------------\n');
-        const message =
-            `*📌 Detail Pelanggan*\n*Nama:* ${orderData.pelanggan.nama}\n*No Handphone:* ${formatPhoneNumber(orderData.pelanggan.no_handphone)}\n*Alamat:* ${orderData.pelanggan.alamat}\n*Metode Pengambilan:* ${orderData.metode_pengambilan}\n*Waktu Pembayaran:* ${orderData.waktu_pembayaran}\n\n*📌 Detail Layanan*\n${layananMessage}\n\n*📌 Rincian Pembayaran*\n*Subtotal:* Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}\n*Ongkir:* Rp 0\n*Total Harga:* Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}\n*Uang Diberikan:* Rp 0\n*Kembalian:* Rp 0\n\n*📌 Status Order*\n${orderData.status}\n\n*📌 Metode Pembayaran*\n${orderData.metode_pembayaran}\n\n*📌 Waktu Order*\n${waktuOrder}`;
-        const encodedMessage = encodeURIComponent(message.trim());
-        window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
-    }
-
-    document.querySelectorAll('.detail-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const orderData = JSON.parse(btn.dataset.order);
+        function openWhatsApp(orderData) {
+            const cleanedPhone = ('' + orderData.pelanggan.no_handphone).replace(/\D/g, '');
+            let whatsappNumber = cleanedPhone.startsWith('0') ? '62' + cleanedPhone.substring(1) : cleanedPhone;
             const layanan = JSON.parse(orderData.layanan);
-            let layananHtml = '';
-            layanan.forEach(item => {
-                layananHtml +=
-                    `<div class="service-box"><strong>${item.nama}</strong><br/>Harga: Rp ${parseInt(item.harga).toLocaleString('id-ID')}<br/>Jumlah: ${item.kuantitas}<br/>Subtotal: Rp ${(item.harga * item.kuantitas).toLocaleString('id-ID')}</div>`;
+            const waktuOrder = new Date(orderData.created_at).toLocaleString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            let alamatLengkap = '-';
-            if (orderData.pelanggan) {
-                const provinsi = orderData.pelanggan.provinsi ?? '';
-                const kota = orderData.pelanggan.kota ?? '';
-                const kecamatan = orderData.pelanggan.kecamatan ?? '';
-                const kodepos = orderData.pelanggan.kodepos ?? '';
-                const detail_alamat = orderData.pelanggan.detail_alamat ?? '';
-                alamatLengkap = `${provinsi}, ${kota}, ${kecamatan}, ${detail_alamat}, ${kodepos}`
-                    .replace(/^, |, $/g, '').replace(/(, ){2,}/g, ', ');
-            }
-            const formattedPhone = formatPhoneNumber(orderData.pelanggan.no_handphone);
-            detailContent.innerHTML =
-                `<div class="space-y-3"><p><strong>Nama:</strong> ${orderData.pelanggan.nama}</p><p><strong>No HP:</strong> ${formattedPhone}</p><p><strong>Alamat:</strong> ${alamatLengkap}</p><p><strong>Pengambilan:</strong> ${orderData.metode_pengambilan}</p><p><strong>Pembayaran:</strong> ${orderData.metode_pembayaran}</p><p><strong>Waktu Order:</strong> ${new Date(orderData.created_at).toLocaleString('id-ID', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p><div class="mt-4"><h5 class="font-semibold text-gray-700">Detail Layanan:</h5><div class="services-container" style="max-height:200px;overflow-y:auto;">${layananHtml}</div></div><p class="text-xl font-bold mt-4 text-right">Total: Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}</p></div><div class="button-group"><button class="btn-green" id="whatsappBtn"><i class="bi bi-whatsapp"></i> WhatsApp</button><a href="https://maps.google.com/?q=${encodeURIComponent(alamatLengkap)}" class="btn-gray" target="_blank"><i class="bi bi-geo-alt-fill"></i> Buka Maps</a></div>`;
-            modal.style.display = "flex";
-            document.getElementById('whatsappBtn').addEventListener('click', () => {
-                openWhatsApp(orderData);
+            const layananMessages = layanan.map(item => {
+                return `*Nama Layanan:* ${item.nama}\n*Kategori:* Satuan\n*Harga:* Rp ${parseInt(item.harga).toLocaleString('id-ID')}\n*Jumlah:* ${item.kuantitas}\n*Subtotal:* Rp ${(item.harga * item.kuantitas).toLocaleString('id-ID')}`;
             });
-        });
-    });
+            const layananMessage = layananMessages.join('\n----------------\n');
+            const message =
+                `*📌 Detail Pelanggan*\n*Nama:* ${orderData.pelanggan.nama}\n*No Handphone:* ${formatPhoneNumber(orderData.pelanggan.no_handphone)}\n*Alamat:* ${orderData.pelanggan.alamat}\n*Metode Pengambilan:* ${orderData.metode_pengambilan}\n*Waktu Pembayaran:* ${orderData.waktu_pembayaran}\n\n*📌 Detail Layanan*\n${layananMessage}\n\n*📌 Rincian Pembayaran*\n*Subtotal:* Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}\n*Ongkir:* Rp 0\n*Total Harga:* Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}\n*Uang Diberikan:* Rp 0\n*Kembalian:* Rp 0\n\n*📌 Status Order*\n${orderData.status}\n\n*📌 Metode Pembayaran*\n${orderData.metode_pembayaran}\n\n*📌 Waktu Order*\n${waktuOrder}`;
+            const encodedMessage = encodeURIComponent(message.trim());
+            window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        }
 
-    document.querySelectorAll('.change-status-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentOrderId = this.getAttribute('data-order-id');
-            currentStatus = this.getAttribute('data-current-status');
-            const metodePengambilan = this.getAttribute('data-metode-pengambilan');
-            
-            // Cari data order untuk mendapatkan informasi pembayaran
-            const orderRow = this.closest('tr');
-            const orderDataElement = orderRow.querySelector('.bayar-btn');
-            if (orderDataElement) {
-                currentOrderData = JSON.parse(orderDataElement.dataset.order);
-            }
-            
-            let statusForDisplay;
-
-            if (currentStatus === 'Diproses') {
-                statusForDisplay = (metodePengambilan === 'Diantar') ? 'Sudah Bisa Diantar' :
-                    'Sudah Bisa Diambil';
-                nextStatus = 'Sudah Bisa Diambil';
-            } else {
-                nextStatus = statusCycle[currentStatus]?.next;
-                statusForDisplay = nextStatus;
-            }
-
-            // Validasi: Cek jika ingin mengubah dari "Sudah Bisa Diambil" ke "Selesai" tapi belum dibayar
-            if (currentStatus === 'Sudah Bisa Diambil' && nextStatus === 'Selesai' && 
-                currentOrderData && currentOrderData.sisa_harga > 0) {
-                Swal.fire({
-                    title: 'Pembayaran Belum Lunas',
-                    text: 'Tidak dapat mengubah status ke Selesai karena pembayaran belum lunas. Silakan selesaikan pembayaran terlebih dahulu.',
-                    icon: 'warning',
-                    confirmButtonText: 'OK'
+        document.querySelectorAll('.detail-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const orderData = JSON.parse(btn.dataset.order);
+                const layanan = JSON.parse(orderData.layanan);
+                let layananHtml = '';
+                layanan.forEach(item => {
+                    layananHtml +=
+                        `<div class="service-box"><strong>${item.nama}</strong><br/>Harga: Rp ${parseInt(item.harga).toLocaleString('id-ID')}<br/>Jumlah: ${item.kuantitas}<br/>Subtotal: Rp ${(item.harga * item.kuantitas).toLocaleString('id-ID')}</div>`;
                 });
-                return;
-            }
-
-            if (!nextStatus) {
-                return;
-            }
-
-            confirmContent.innerHTML =
-                `<p>Anda yakin ingin mengubah status order ini?</p><div class="mt-3 p-3 bg-gray-50 rounded-lg"><div class="flex items-center justify-between"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span><i class="fas fa-arrow-right text-gray-500 mx-2"></i><span class="status-badge ${getStatusClass(statusForDisplay)}">${statusForDisplay}</span></div></div>`;
-            confirmModal.style.display = "flex";
+                let alamatLengkap = '-';
+                if (orderData.pelanggan) {
+                    const provinsi = orderData.pelanggan.provinsi ?? '';
+                    const kota = orderData.pelanggan.kota ?? '';
+                    const kecamatan = orderData.pelanggan.kecamatan ?? '';
+                    const kodepos = orderData.pelanggan.kodepos ?? '';
+                    const detail_alamat = orderData.pelanggan.detail_alamat ?? '';
+                    alamatLengkap = `${provinsi}, ${kota}, ${kecamatan}, ${detail_alamat}, ${kodepos}`
+                        .replace(/^, |, $/g, '').replace(/(, ){2,}/g, ', ');
+                }
+                const formattedPhone = formatPhoneNumber(orderData.pelanggan.no_handphone);
+                detailContent.innerHTML =
+                    `<div class="space-y-3"><p><strong>Nama:</strong> ${orderData.pelanggan.nama}</p><p><strong>No HP:</strong> ${formattedPhone}</p><p><strong>Alamat:</strong> ${alamatLengkap}</p><p><strong>Pengambilan:</strong> ${orderData.metode_pengambilan}</p><p><strong>Pembayaran:</strong> ${orderData.metode_pembayaran}</p><p><strong>Waktu Order:</strong> ${new Date(orderData.created_at).toLocaleString('id-ID', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p><div class="mt-4"><h5 class="font-semibold text-gray-700">Detail Layanan:</h5><div class="services-container" style="max-height:200px;overflow-y:auto;">${layananHtml}</div></div><p class="text-xl font-bold mt-4 text-right">Total: Rp ${parseInt(orderData.total_harga).toLocaleString('id-ID')}</p></div><div class="button-group"><button class="btn-green" id="whatsappBtn"><i class="bi bi-whatsapp"></i> WhatsApp</button><a href="https://maps.google.com/?q=${encodeURIComponent(alamatLengkap)}" class="btn-gray" target="_blank"><i class="bi bi-geo-alt-fill"></i> Buka Maps</a></div>`;
+                modal.style.display = "flex";
+                document.getElementById('whatsappBtn').addEventListener('click', () => {
+                    openWhatsApp(orderData);
+                });
+            });
         });
-    });
 
-    function getStatusClass(status) {
-        if (status === 'Selesai') return 'status-completed';
-        if (status === 'Diproses') return 'status-processing';
-        if (status === 'Sudah Bisa Diambil' || status === 'Sudah Bisa Diantar') return 'status-pending';
-        return 'status-pending';
-    }
+        document.querySelectorAll('.change-status-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentOrderId = this.getAttribute('data-order-id');
+                currentStatus = this.getAttribute('data-current-status');
+                const metodePengambilan = this.getAttribute('data-metode-pengambilan');
 
-    function changeStatus() {
-        fetch(`{{ url('kasir/data_order') }}/${currentOrderId}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    status: nextStatus
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
+                // Cari data order untuk mendapatkan informasi pembayaran
+                const orderRow = this.closest('tr');
+                const orderDataElement = orderRow.querySelector('.bayar-btn');
+                if (orderDataElement) {
+                    currentOrderData = JSON.parse(orderDataElement.dataset.order);
+                }
+
+                let statusForDisplay;
+
+                if (currentStatus === 'Diproses') {
+                    statusForDisplay = (metodePengambilan === 'Diantar') ? 'Sudah Bisa Diantar' :
+                        'Sudah Bisa Diambil';
+                    nextStatus = 'Sudah Bisa Diambil';
+                } else {
+                    nextStatus = statusCycle[currentStatus]?.next;
+                    statusForDisplay = nextStatus;
+                }
+
+                // Validasi: Cek jika ingin mengubah dari "Sudah Bisa Diambil" ke "Selesai" tapi belum dibayar
+                if (currentStatus === 'Sudah Bisa Diambil' && nextStatus === 'Selesai' &&
+                    currentOrderData && currentOrderData.sisa_harga > 0) {
                     Swal.fire({
-                        title: 'Berhasil!',
-                        text: 'Status berhasil diubah',
-                        icon: 'success',
+                        title: 'Pembayaran Belum Lunas',
+                        text: 'Tidak dapat mengubah status ke Selesai karena pembayaran belum lunas. Silakan selesaikan pembayaran terlebih dahulu.',
+                        icon: 'warning',
                         confirmButtonText: 'OK'
-                    }).then(() => {
-                        window.location.reload();
                     });
-                } else {
-                    const errorMessage = data.error || 'Gagal mengubah status';
-                    Swal.fire('Error', errorMessage, 'error');
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Terjadi kesalahan. Silakan coba lagi.', 'error');
+
+                if (!nextStatus) {
+                    return;
+                }
+
+                confirmContent.innerHTML =
+                    `<p>Anda yakin ingin mengubah status order ini?</p><div class="mt-3 p-3 bg-gray-50 rounded-lg"><div class="flex items-center justify-between"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span><i class="fas fa-arrow-right text-gray-500 mx-2"></i><span class="status-badge ${getStatusClass(statusForDisplay)}">${statusForDisplay}</span></div></div>`;
+                confirmModal.style.display = "flex";
             });
-    }
+        });
 
-    confirmBtn.addEventListener('click', changeStatus);
+        function getStatusClass(status) {
+            if (status === 'Selesai') return 'status-completed';
+            if (status === 'Diproses') return 'status-processing';
+            if (status === 'Sudah Bisa Diambil' || status === 'Sudah Bisa Diantar') return 'status-pending';
+            return 'status-pending';
+        }
 
-    function closeModal() {
-        modal.style.display = "none";
-    }
-
-    function closeConfirmModal() {
-        confirmModal.style.display = "none";
-        currentOrderId = null;
-        nextStatus = null;
-        currentStatus = null;
-        currentOrderData = null;
-    }
-
-    document.querySelectorAll('.bayar-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const orderData = JSON.parse(this.dataset.order);
-            const sisaBayar = parseInt(orderData.sisa_harga);
-            bayarContent.innerHTML =
-                `<div class="space-y-4"><p><strong>Sisa Bayaran:</strong> Rp ${sisaBayar.toLocaleString('id-ID')}</p><label class="block mb-2 font-medium">Metode Pembayaran</label><select id="metodeBayar" class="w-full border rounded px-3 py-2 mb-2"><option value="Non Tunai">Non Tunai</option><option value="Tunai">Tunai</option></select><div id="tunaiInput" style="display:none;"><label class="block mb-2 font-medium">Jumlah Uang Diberikan</label><input type="number" id="uangDiberikan" class="w-full border rounded px-3 py-2" min="0" placeholder="Masukkan jumlah uang"></div><div id="kembalianInfo" class="mt-2 text-green-600 font-semibold" style="display:none;"></div><div class="button-group mt-4"><button class="btn-green" id="submitBayarBtn"><i class="bi bi-check-circle"></i> Bayar</button><button class="btn-gray" onclick="closeBayarModal()"><i class="bi bi-x-circle"></i> Batal</button></div></div>`;
-            bayarModal.style.display = "flex";
-            document.getElementById('metodeBayar').addEventListener('change', function() {
-                if (this.value === 'Tunai') {
-                    document.getElementById('tunaiInput').style.display = '';
-                } else {
-                    document.getElementById('tunaiInput').style.display = 'none';
-                    document.getElementById('kembalianInfo').style.display = 'none';
-                }
-            });
-            document.getElementById('uangDiberikan').addEventListener('input', function() {
-                const uang = parseInt(this.value) || 0;
-                const kembali = uang - sisaBayar;
-                const info = document.getElementById('kembalianInfo');
-                if (uang >= sisaBayar) {
-                    info.style.display = '';
-                    info.textContent = `Kembalian: Rp ${kembali.toLocaleString('id-ID')}`;
-                    info.style.color = '#059669';
-                } else {
-                    info.style.display = '';
-                    info.textContent = `Kurang: Rp ${(sisaBayar - uang).toLocaleString('id-ID')}`;
-                    info.style.color = '#dc2626';
-                }
-            });
-            document.getElementById('submitBayarBtn').onclick = function() {
-                const metode = document.getElementById('metodeBayar').value;
-                let uang = null;
-                if (metode === 'Tunai') {
-                    uang = parseInt(document.getElementById('uangDiberikan').value) || 0;
-                    if (uang < sisaBayar) {
-                        Swal.fire({
-                            title: 'Peringatan!',
-                            text: 'Jumlah uang kurang dari total pembayaran!',
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        });
-                        return;
-                    }
-                }
-                
-                // Tampilkan loading
-                const submitBtn = document.getElementById('submitBayarBtn');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                submitBtn.disabled = true;
-                
-                fetch(`/kasir/data_order/${orderData.id}/bayar`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            metode_pembayaran: metode,
-                            uang_diberikan: uang
-                        })
+        function changeStatus() {
+            fetch(`{{ url('kasir/data_order') }}/${currentOrderId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        status: nextStatus
                     })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.success) {
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Status berhasil diubah',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        const errorMessage = data.error || 'Gagal mengubah status';
+                        Swal.fire('Error', errorMessage, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Terjadi kesalahan. Silakan coba lagi.', 'error');
+                });
+        }
+
+        confirmBtn.addEventListener('click', changeStatus);
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        function closeConfirmModal() {
+            confirmModal.style.display = "none";
+            currentOrderId = null;
+            nextStatus = null;
+            currentStatus = null;
+            currentOrderData = null;
+        }
+
+        document.querySelectorAll('.bayar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const orderData = JSON.parse(this.dataset.order);
+                const sisaBayar = parseInt(orderData.sisa_harga);
+                bayarContent.innerHTML =
+                    `<div class="space-y-4"><p><strong>Sisa Bayaran:</strong> Rp ${sisaBayar.toLocaleString('id-ID')}</p><label class="block mb-2 font-medium">Metode Pembayaran</label><select id="metodeBayar" class="w-full border rounded px-3 py-2 mb-2"><option value="Non Tunai">Non Tunai</option><option value="Tunai">Tunai</option></select><div id="tunaiInput" style="display:none;"><label class="block mb-2 font-medium">Jumlah Uang Diberikan</label><input type="number" id="uangDiberikan" class="w-full border rounded px-3 py-2" min="0" placeholder="Masukkan jumlah uang"></div><div id="kembalianInfo" class="mt-2 text-green-600 font-semibold" style="display:none;"></div><div class="button-group mt-4"><button class="btn-green" id="submitBayarBtn"><i class="bi bi-check-circle"></i> Bayar</button><button class="btn-gray" onclick="closeBayarModal()"><i class="bi bi-x-circle"></i> Batal</button></div></div>`;
+                bayarModal.style.display = "flex";
+                document.getElementById('metodeBayar').addEventListener('change', function() {
+                    if (this.value === 'Tunai') {
+                        document.getElementById('tunaiInput').style.display = '';
+                    } else {
+                        document.getElementById('tunaiInput').style.display = 'none';
+                        document.getElementById('kembalianInfo').style.display = 'none';
+                    }
+                });
+                document.getElementById('uangDiberikan').addEventListener('input', function() {
+                    const uang = parseInt(this.value) || 0;
+                    const kembali = uang - sisaBayar;
+                    const info = document.getElementById('kembalianInfo');
+                    if (uang >= sisaBayar) {
+                        info.style.display = '';
+                        info.textContent = `Kembalian: Rp ${kembali.toLocaleString('id-ID')}`;
+                        info.style.color = '#059669';
+                    } else {
+                        info.style.display = '';
+                        info.textContent =
+                            `Kurang: Rp ${(sisaBayar - uang).toLocaleString('id-ID')}`;
+                        info.style.color = '#dc2626';
+                    }
+                });
+                document.getElementById('submitBayarBtn').onclick = function() {
+                    const metode = document.getElementById('metodeBayar').value;
+                    let uang = null;
+                    if (metode === 'Tunai') {
+                        uang = parseInt(document.getElementById('uangDiberikan').value) || 0;
+                        if (uang < sisaBayar) {
                             Swal.fire({
-                                title: 'Berhasil!',
-                                text: 'Pembayaran berhasil diproses',
-                                icon: 'success',
+                                title: 'Peringatan!',
+                                text: 'Jumlah uang kurang dari total pembayaran!',
+                                icon: 'warning',
                                 confirmButtonText: 'OK'
-                            }).then(() => {
-                                closeBayarModal();
-                                window.location.reload();
                             });
-                        } else {
+                            return;
+                        }
+                    }
+
+                    // Tampilkan loading
+                    const submitBtn = document.getElementById('submitBayarBtn');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                    submitBtn.disabled = true;
+
+                    fetch(`/kasir/data_order/${orderData.id}/bayar`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                metode_pembayaran: metode,
+                                uang_diberikan: uang
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.success) {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: 'Pembayaran berhasil diproses',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    closeBayarModal();
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: res.message || 'Pembayaran gagal diproses',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                submitBtn.innerHTML = originalText;
+                                submitBtn.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
                             Swal.fire({
-                                title: 'Gagal!',
-                                text: res.message || 'Pembayaran gagal diproses',
+                                title: 'Error!',
+                                text: 'Terjadi kesalahan saat memproses pembayaran',
                                 icon: 'error',
                                 confirmButtonText: 'OK'
                             });
                             submitBtn.innerHTML = originalText;
                             submitBtn.disabled = false;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Terjadi kesalahan saat memproses pembayaran',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
                         });
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    });
-            };
-        });
-    });
-
-    function closeBayarModal() {
-        bayarModal.style.display = "none";
-    }
-    
-    window.onclick = function(e) {
-        if (e.target === modal) closeModal();
-        if (e.target === confirmModal) closeConfirmModal();
-        if (e.target === bayarModal) closeBayarModal();
-    }
-    
-    const searchInput = document.querySelector('input[name="search"]');
-    const orderTableRows = document.querySelectorAll('.order-table tbody tr');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            orderTableRows.forEach(row => {
-                const rowText = row.innerText.toLowerCase();
-                if (rowText.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+                };
             });
         });
-    }
-    
-    // Logout functionality
-    const userMenuButton = document.getElementById('user-menu-button');
-    const userMenu = document.getElementById('user-menu');
-    const logoutButton = document.getElementById('logout-button');
-    const logoutForm = document.getElementById('logout-form');
 
-    if (userMenuButton) {
-        userMenuButton.addEventListener('click', () => {
-            userMenu.classList.toggle('hidden');
-        });
-    }
-
-    window.addEventListener('click', function(e) {
-        if (userMenuButton && !userMenuButton.contains(e.target) && userMenu && !userMenu.contains(e.target)) {
-            userMenu.classList.add('hidden');
+        function closeBayarModal() {
+            bayarModal.style.display = "none";
         }
-    });
 
-    if (logoutButton) {
+        window.onclick = function(e) {
+            if (e.target === modal) closeModal();
+            if (e.target === confirmModal) closeConfirmModal();
+            if (e.target === bayarModal) closeBayarModal();
+        }
+
+        const searchInput = document.querySelector('input[name="search"]');
+        const orderTableRows = document.querySelectorAll('.order-table tbody tr');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                orderTableRows.forEach(row => {
+                    const rowText = row.innerText.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Logout functionality
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+        const logoutButton = document.getElementById('logout-button');
+        const logoutForm = document.getElementById('logout-form');
+
+        if (userMenuButton) {
+            userMenuButton.addEventListener('click', () => {
+                userMenu.classList.toggle('hidden');
+            });
+        }
+
+        window.addEventListener('click', function(e) {
+            if (userMenuButton && !userMenuButton.contains(e.target) && userMenu && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Logout Confirmation
         logoutButton.addEventListener('click', (event) => {
-            event.preventDefault();
+            event.preventDefault(); // Mencegah form submit langsung
             Swal.fire({
                 title: 'Anda yakin ingin logout?',
                 icon: 'warning',
@@ -965,19 +966,17 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    if(logoutForm) {
-                        logoutForm.submit();
-                    }
+                    logoutButton.closest('form').submit();
                 }
             });
         });
-    }
 
-    // Inisialisasi perPage selector saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', function() {
-        initPerPageSelector();
-    });
-</script>
+
+        // Inisialisasi perPage selector saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            initPerPageSelector();
+        });
+    </script>
 </body>
 
 </html>
