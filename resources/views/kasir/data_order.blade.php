@@ -9,6 +9,7 @@
     <title>Data Order</title>
     <script src="https://kit.fontawesome.com/0948e65078.js" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
     <style>
         .services-container {
             max-height: 300px;
