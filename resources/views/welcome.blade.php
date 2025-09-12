@@ -7,6 +7,7 @@
   @vite(['resources/css/app.css','resources/js/app.js'])
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <meta name="description" content="Jasa laundry kilat, wangi, dan rapi. Antar-jemput, cuci setrika, express. Pesan sekarang!">
+  <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-sky-100 text-gray-800 font-[Poppins]">
 
