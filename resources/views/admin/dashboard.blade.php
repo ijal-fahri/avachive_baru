@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
     <style> 
         body { font-family: 'Poppins', sans-serif; }
         ::-webkit-scrollbar { width: 8px; }

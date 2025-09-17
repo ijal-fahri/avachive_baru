@@ -16,7 +16,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+ <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
     <style>
         body { font-family: 'Poppins', sans-serif; }
         .sidebar-mobile-open { transform: translateX(0) !important; }

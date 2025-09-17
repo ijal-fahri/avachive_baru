@@ -12,7 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+ <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
     <style>
         body { font-family: 'Poppins', sans-serif; }
         .sidebar-mobile-open { transform: translateX(0) !important; }
