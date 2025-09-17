@@ -55,9 +55,10 @@ require __DIR__.'/auth.php';
 Route::middleware('auth')->group(function () {
 
     // Rute Profile (umum untuk semua user)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Catatan: Anda belum mendefinisikan ProfileController umum, ini mungkin menyebabkan error.
+    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     
     // --- GRUP ROUTE UNTUK ADMIN ---
@@ -75,30 +76,34 @@ Route::middleware('auth')->group(function () {
 
         // Fitur Layanan (Produk)
         Route::resource('produk', LayananController::class);
+        Route::post('/layanan/data', [LayananController::class, 'getLayananData'])->name('layanan.data');
 
         // Fitur Pengguna (Karyawan)
         Route::resource('pengguna', PenggunaController::class)->names(['index' => 'datauser']);
+        Route::post('/karyawan/data', [PenggunaController::class, 'getKaryawanData'])->name('karyawan.data');
 
         // Fitur Pengaturan
         Route::get('/pengaturan', function () { return view('pengaturan'); })->name('pengaturan');
 
         // Fitur Laporan
-        Route::view('/laporan', 'admin.reporting')->name('laporan');
+        // Route API untuk fungsionalitas AJAX di halaman laporan
+        Route::get('/laporan/filters', [DataOrderController::class, 'getFilterOptions'])->name('laporan.filters');
+        Route::post('/laporan/data', [DataOrderController::class, 'getData'])->name('laporan.data');
     });
 
 
     // --- GRUP ROUTE UNTUK KASIR ---
     Route::middleware('kasir')->prefix('kasir')->group(function () {
         Route::get('/dashboard', [KasirController::class, 'index'])->name('kasir.dashboard');
-       Route::resource('/pelanggan', KasirPelangganController::class);
-Route::resource('/buat_order', KasirBuatOrderController::class);
-// Route::resource('/kasir/data_order', KasirDataOrderController::class);
-Route::resource('/pengaturan', KasirSettingsController::class);
-Route::get('/data_order', [KasirDataOrderController::class, 'index'])->middleware('auth','kasir')->name('kasir.dataorder.index');
-Route::patch('/data_order/{order}/status', [KasirDataOrderController::class, 'updateStatus'])->middleware('auth','kasir')->name('kasir.dataorder.update_status');
-Route::get('/riwayat_order', [KasirRiwayatOrderController::class, 'index'])->name('kasir.riwayatorder.index');
-Route::post('/data_order/{id}/bayar', [KasirBuatOrderController::class, 'bayar'])->name('kasir.dataorder.bayar');
-Route::get('/riwayat_order/{order}/cetak', [KasirController::class, 'cetakRiwayatOrder'])->name('kasir.riwayatorder.cetak');
+        Route::resource('/pelanggan', KasirPelangganController::class);
+        Route::resource('/buat_order', KasirBuatOrderController::class);
+        // Route::resource('/kasir/data_order', KasirDataOrderController::class);
+        Route::resource('/pengaturan', KasirSettingsController::class);
+        Route::get('/data_order', [KasirDataOrderController::class, 'index'])->middleware('auth','kasir')->name('kasir.dataorder.index');
+        Route::patch('/data_order/{order}/status', [KasirDataOrderController::class, 'updateStatus'])->middleware('auth','kasir')->name('kasir.dataorder.update_status');
+        Route::get('/riwayat_order', [KasirRiwayatOrderController::class, 'index'])->name('kasir.riwayatorder.index');
+        Route::post('/data_order/{id}/bayar', [KasirBuatOrderController::class, 'bayar'])->name('kasir.dataorder.bayar');
+        Route::get('/riwayat_order/{order}/cetak', [KasirController::class, 'cetakRiwayatOrder'])->name('kasir.riwayatorder.cetak');
     });
 
 
@@ -106,10 +111,10 @@ Route::get('/riwayat_order/{order}/cetak', [KasirController::class, 'cetakRiwaya
     Route::middleware('driver')->prefix('driver')->group(function () {
         Route::get('/dashboard', [DriverController::class, 'index'])->name('driver.dashboard');
         //Driver
-Route::post('/pengiriman/{id}/lunaskan', [DriverController::class, 'lunaskanPembayaran'])->name('driver.order.lunaskan');
-Route::resource('/riwayat', DriverRiwayatController::class);
-Route::resource('/pengaturan', DriverPengaturanController::class);
-Route::post('/pengiriman/{id}/update-status', [DriverController::class, 'orderSelesai'])->name('driver.order.update-status');
+        Route::post('/pengiriman/{id}/lunaskan', [DriverController::class, 'lunaskanPembayaran'])->name('driver.order.lunaskan');
+        Route::resource('/riwayat', DriverRiwayatController::class);
+        Route::resource('/pengaturan', DriverPengaturanController::class);
+        Route::post('/pengiriman/{id}/update-status', [DriverController::class, 'orderSelesai'])->name('driver.order.update-status');
     });
 
 });
@@ -134,9 +139,11 @@ Route::middleware(['auth', 'owner'])->prefix('owner')->name('owner.')->group(fun
     
     // --- CRUD Admin ---
     Route::resource('/dataadmin', DataKaryawanController::class)->except(['create', 'edit'])->names('dataadmin');
-    
+    Route::post('/admins/data', [DataKaryawanController::class, 'getAdminsData'])->name('admins.data');
+
     // --- CRUD Karyawan ---
     Route::resource('/datakaryawan', OwnerDataKaryawanController::class)->except(['create', 'edit'])->names('datakaryawan');
-
+    // [BARU] Route API untuk mengambil data karyawan (owner view) via AJAX
+    Route::post('/karyawan/data', [OwnerDataKaryawanController::class, 'getKaryawanData'])->name('datakaryawan.data');
     
 });

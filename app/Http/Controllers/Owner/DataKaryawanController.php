@@ -38,7 +38,7 @@ class DataKaryawanController extends Controller
             return redirect()->route('owner.dataadmin.index')
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error_modal', 'tambah'); // Sinyal untuk buka modal tambah
+                ->with('error_modal_type', 'add');
         }
 
         User::create([
@@ -72,7 +72,7 @@ class DataKaryawanController extends Controller
             return redirect()->route('owner.dataadmin.index')
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error_modal', 'edit') // Sinyal untuk buka modal edit
+                ->with('error_modal_type', 'edit') 
                 ->with('error_id', $dataadmin->id); 
         }
 
@@ -103,5 +103,65 @@ class DataKaryawanController extends Controller
             return back()->with('error', 'Gagal menghapus admin.');
         }
     }
-}
 
+
+    // ====================================================================
+    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
+    // ====================================================================
+
+    /**
+     * Menyediakan data admin untuk DataTables dengan server-side processing.
+     */
+    public function getAdminsData(Request $request)
+    {
+        // Query dasar hanya untuk user dengan role 'admin'
+        $query = User::with('cabang')->where('usertype', 'admin');
+
+        // Filter berdasarkan cabang yang dipilih
+        if ($request->filled('cabang_id') && $request->cabang_id != 'semua') {
+            $query->where('cabang_id', $request->cabang_id);
+        }
+
+        // Filter berdasarkan pencarian DataTables
+        if ($request->filled('search.value')) {
+            $searchValue = $request->input('search.value');
+            $query->where(function($q) use ($searchValue) {
+                $q->where('name', 'like', '%' . $searchValue . '%')
+                  ->orWhereHas('cabang', function($cq) use ($searchValue) {
+                      $cq->where('nama_cabang', 'like', '%' . $searchValue . '%');
+                  });
+            });
+        }
+
+        // Hitung total record sebelum paginasi
+        $recordsFiltered = $query->count();
+        
+        // Ambil data sesuai paginasi dari DataTables
+        $admins = $query->skip($request->start)
+                        ->take($request->length)
+                        ->latest()
+                        ->get();
+
+        // Format data untuk respons JSON
+        $data = [];
+        foreach ($admins as $key => $admin) {
+            $data[] = [
+                'no' => $request->start + $key + 1,
+                'name' => $admin->name,
+                'nama_cabang' => $admin->cabang->nama_cabang ?? 'Tidak Terkait',
+                'plain_password' => $admin->plain_password,
+                'id' => $admin->id,
+                'cabang_id' => $admin->cabang_id,
+            ];
+        }
+        
+        $totalRecords = User::where('usertype', 'admin')->count();
+
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+}

@@ -35,7 +35,11 @@ class LayananController extends Controller
         if ($validator->fails()) {
             return redirect()->route('produk.index')
                 ->withErrors($validator)
-                ->with('error_modal', 'tambah');
+                ->withInput()
+                ->with('error_modal', 'tambah')
+                ->with('error_modal_title', 'Gagal Menambah Layanan')
+                ->with('error_modal_action', route('produk.store'))
+                ->with('error_modal_method', 'POST');
         }
 
         Layanan::create([
@@ -68,7 +72,11 @@ class LayananController extends Controller
         if ($validator->fails()) {
             return redirect()->route('produk.index')
                 ->withErrors($validator)
+                ->withInput()
                 ->with('error_modal', 'edit')
+                ->with('error_modal_title', 'Gagal Mengedit Layanan')
+                ->with('error_modal_action', route('produk.update', $produk->id))
+                ->with('error_modal_method', 'PUT')
                 ->with('error_id', $produk->id);
         }
 
@@ -90,5 +98,65 @@ class LayananController extends Controller
 
         return redirect()->route('produk.index')->with('success', 'Layanan berhasil dihapus.');
     }
-}
 
+
+    // ====================================================================
+    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
+    // ====================================================================
+
+    /**
+     * Menyediakan data untuk DataTables dengan server-side processing.
+     */
+    public function getLayananData(Request $request)
+    {
+        $cabangId = Auth::user()->cabang_id;
+
+        // Query dasar hanya untuk layanan di cabang ini
+        $query = Layanan::where('cabang_id', $cabangId);
+
+        // Filter berdasarkan kategori (dari tab filter)
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        // Filter berdasarkan pencarian DataTables
+        if ($request->filled('search.value')) {
+            $searchValue = $request->input('search.value');
+            $query->where(function($q) use ($searchValue) {
+                $q->where('nama', 'like', '%' . $searchValue . '%')
+                  ->orWhere('paket', 'like', '%' . $searchValue . '%');
+            });
+        }
+
+        // Hitung total record sebelum paginasi
+        $recordsFiltered = $query->count();
+        
+        // Ambil data sesuai paginasi dari DataTables
+        $layanans = $query->skip($request->start)
+                          ->take($request->length)
+                          ->latest()
+                          ->get();
+
+        // Format data untuk respons JSON
+        $data = [];
+        foreach ($layanans as $key => $layanan) {
+            $hargaFormatted = 'Rp ' . number_format($layanan->harga, 0, ',', '.') . ' / ' . ($layanan->kategori == 'Kiloan' ? 'Kg' : 'Pcs');
+            $data[] = [
+                'no' => $request->start + $key + 1,
+                'nama' => $layanan->nama,
+                'paket' => $layanan->paket,
+                'harga' => $hargaFormatted,
+                'json' => $layanan, // Kirim data mentah untuk modal edit
+            ];
+        }
+        
+        $totalRecords = Layanan::where('cabang_id', $cabangId)->count();
+
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+}

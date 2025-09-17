@@ -111,4 +111,72 @@ class OwnerDataKaryawanController extends Controller
             return back()->with('error', 'Gagal menghapus karyawan.');
         }
     }
+
+
+    // ====================================================================
+    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
+    // ====================================================================
+
+    /**
+     * Menyediakan data karyawan untuk DataTables dengan server-side processing.
+     */
+    public function getKaryawanData(Request $request)
+    {
+        // Query dasar hanya untuk user dengan role 'kasir' atau 'driver'
+        $query = User::with('cabang')->whereIn('usertype', ['kasir', 'driver']);
+
+        // Filter berdasarkan cabang yang dipilih
+        if ($request->filled('cabang_id') && $request->cabang_id != 'semua') {
+            $query->where('cabang_id', $request->cabang_id);
+        }
+
+        // Filter berdasarkan role yang dipilih
+        if ($request->filled('usertype') && $request->usertype != 'semua') {
+            $query->where('usertype', $request->usertype);
+        }
+
+        // Filter berdasarkan pencarian DataTables
+        if ($request->filled('search.value')) {
+            $searchValue = $request->input('search.value');
+            $query->where(function($q) use ($searchValue) {
+                $q->where('name', 'like', '%' . $searchValue . '%')
+                  ->orWhere('usertype', 'like', '%' . $searchValue . '%')
+                  ->orWhereHas('cabang', function($cq) use ($searchValue) {
+                      $cq->where('nama_cabang', 'like', '%' . $searchValue . '%');
+                  });
+            });
+        }
+
+        // Hitung total record sebelum paginasi
+        $recordsFiltered = $query->count();
+        
+        // Ambil data sesuai paginasi dari DataTables
+        $karyawans = $query->skip($request->start)
+                           ->take($request->length)
+                           ->latest()
+                           ->get();
+
+        // Format data untuk respons JSON
+        $data = [];
+        foreach ($karyawans as $key => $karyawan) {
+            $data[] = [
+                'no' => $request->start + $key + 1,
+                'name' => $karyawan->name,
+                'nama_cabang' => $karyawan->cabang->nama_cabang ?? 'Tidak Terkait',
+                'usertype' => $karyawan->usertype,
+                'plain_password' => $karyawan->plain_password,
+                'id' => $karyawan->id,
+                'cabang_id' => $karyawan->cabang_id,
+            ];
+        }
+        
+        $totalRecords = User::whereIn('usertype', ['kasir', 'driver'])->count();
+
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
 }

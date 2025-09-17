@@ -23,6 +23,7 @@ class PenggunaController extends Controller
                      ->latest()
                      ->get();
                      
+        // Ganti nama view jika nama file Anda berbeda, misal: 'admin.karyawan.index'
         return view('admin.pengguna.index', compact('users'));
     }
 
@@ -31,10 +32,9 @@ class PenggunaController extends Controller
      */
     public function store(Request $request)
     {
-        // PERBAIKAN: Aturan 'confirmed' dihapus dari validasi password
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:100', 'unique:users'],
-            'password' => ['required', Rules\Password::defaults()], // 'confirmed' dihapus
+            'name' => ['required', 'string', 'max:100', 'unique:users,name'],
+            'password' => ['required', Rules\Password::defaults()],
             'usertype' => ['required', 'in:kasir,driver'],
         ]);
 
@@ -42,7 +42,10 @@ class PenggunaController extends Controller
             return redirect()->route('datauser')
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error_modal', 'tambah');
+                ->with('error_modal', 'tambah')
+                ->with('error_modal_title', 'Gagal Menambah Karyawan')
+                ->with('error_modal_action', route('pengguna.store'))
+                ->with('error_modal_method', 'POST');
         }
 
         User::create([
@@ -65,11 +68,10 @@ class PenggunaController extends Controller
             abort(403, 'AKSES DITOLAK');
         }
 
-        // PERBAIKAN: Aturan 'confirmed' dihapus dari validasi password
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:100', 'unique:users,name,' . $pengguna->id],
             'usertype' => 'required|in:kasir,driver',
-            'password' => ['nullable', Rules\Password::defaults()], // 'confirmed' dihapus
+            'password' => ['nullable', Rules\Password::defaults()],
         ]);
         
         if ($validator->fails()) {
@@ -77,6 +79,9 @@ class PenggunaController extends Controller
                 ->withErrors($validator)
                 ->withInput()
                 ->with('error_modal', 'edit')
+                ->with('error_modal_title', 'Gagal Mengedit Karyawan')
+                ->with('error_modal_action', route('pengguna.update', $pengguna->id))
+                ->with('error_modal_method', 'PUT')
                 ->with('error_id', $pengguna->id);
         }
 
@@ -107,5 +112,62 @@ class PenggunaController extends Controller
         $pengguna->delete();
         return redirect()->route('datauser')->with('success', 'Karyawan berhasil dihapus.');
     }
-}
 
+
+    // ====================================================================
+    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
+    // ====================================================================
+
+    /**
+     * Menyediakan data untuk DataTables dengan server-side processing.
+     */
+    public function getKaryawanData(Request $request)
+    {
+        $cabangId = Auth::user()->cabang_id;
+
+        // Query dasar hanya untuk karyawan di cabang ini (bukan admin/owner)
+        $query = User::where('cabang_id', $cabangId)
+                     ->whereIn('usertype', ['kasir', 'driver']);
+
+        // Filter berdasarkan role (dari tab filter)
+        if ($request->filled('role')) {
+            $query->where('usertype', $request->role);
+        }
+
+        // Filter berdasarkan pencarian DataTables
+        if ($request->filled('search.value')) {
+            $searchValue = $request->input('search.value');
+            $query->where('name', 'like', '%' . $searchValue . '%');
+        }
+
+        // Hitung total record sebelum paginasi
+        $recordsFiltered = $query->count();
+        
+        // Ambil data sesuai paginasi dari DataTables
+        $users = $query->skip($request->start)
+                       ->take($request->length)
+                       ->latest() // Urutkan berdasarkan yang terbaru
+                       ->get();
+
+        // Format data untuk respons JSON
+        $data = [];
+        foreach ($users as $key => $user) {
+            $data[] = [
+                'no' => $request->start + $key + 1,
+                'name' => $user->name,
+                'usertype' => $user->usertype,
+                'plain_password' => $user->plain_password ?? 'Belum Diatur',
+                'id' => $user->id, // Kirim ID untuk tombol aksi
+            ];
+        }
+        
+        $totalRecords = User::where('cabang_id', $cabangId)->whereIn('usertype', ['kasir', 'driver'])->count();
+
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+}
