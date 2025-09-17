@@ -6,26 +6,63 @@
     <title>Data Karyawan - Admin Panel</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
+        /* FONT & SCROLLBAR DASAR */
         body { font-family: 'Poppins', sans-serif; }
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #14b8a6; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0d9488; }
         .sidebar-mobile-open { transform: translateX(0) !important; }
-        @media (max-width: 768px) {
-            .responsive-table thead { display: none; }
-            .responsive-table tr { display: block; margin-bottom: 1rem; border-radius: 0.75rem; padding: 1rem; background-color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-            .responsive-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9; text-align: right; }
-            .responsive-table td:last-child { border-bottom: none; padding-top: 1rem; }
-            .responsive-table td::before { content: attr(data-label); font-weight: 600; text-align: left; padding-right: 1rem; color: #475569; }
-        }
+
+        /* STYLING TERPUSAT UNTUK INPUT & SELECT */
+        .form-input, 
+        #userTable_wrapper .dt-search input, 
+        #userTable_wrapper .dt-length select { width: 100%; background-color: white !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-radius: 0.5rem !important; padding: 0.6rem 1rem !important; transition: all 0.2s ease-in-out; outline: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .form-input:focus,
+        #userTable_wrapper .dt-search input:focus, 
+        #userTable_wrapper .dt-length select:focus { border-color: #14b8a6 !important; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important; }
+        select.form-input,
+        #userTable_wrapper .dt-length select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem !important; }
+        #userTable_wrapper .dt-search input { border-radius: 9999px !important; }
+        #userTable_wrapper .dt-length select { width: auto; }
+        @media (min-width: 768px) { #userTable_wrapper .dt-search input { min-width: 250px; width: auto; } }
+
+        /* STYLING LAYOUT DATATABLES */
+        #userTable_wrapper .dt-controls-row,
+        #userTable_wrapper .dt-bottom-row { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0.25rem; }
+        #userTable_wrapper .dt-controls-row { margin-bottom: 1.5rem; }
+        #userTable_wrapper .dt-bottom-row { margin-top: 1.5rem; }
+        @media (min-width: 768px) { #userTable_wrapper .dt-controls-row, #userTable_wrapper .dt-bottom-row { flex-direction: row; justify-content: space-between; align-items: center; } }
+
+        /* STYLING TABEL UTAMA */
+        #userTable { border-collapse: collapse; }
+        #userTable thead th { font-weight: 600; text-align: left; padding: 1rem 1.25rem; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        #userTable tbody td { padding: 1rem 1.25rem; color: #334155; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        #userTable tbody tr:last-child td { border-bottom: none; }
+        #userTable tbody tr:hover { background-color: #f8fafc; }
+
+        /* STYLING PAGINASI & INFO BAWAH */
+        #userTable_wrapper .dt-info { color: #64748b; font-size: 0.875rem; }
+        #userTable_wrapper .dt-paging .dt-paging-button { border: 1px solid #cbd5e1 !important; transition: all 0.15s ease-in-out !important; font-weight: 600 !important; border-radius: 0.5rem !important; margin: 0 3px !important; padding: 0.5em 1em !important; background: #fff !important; color: #334155 !important; }
+        #userTable_wrapper .dt-paging .dt-paging-button:not(.disabled):hover { background-color: #f1f5f9 !important; border-color: #94a3b8 !important; }
+        #userTable_wrapper .dt-paging .dt-paging-button.current { background-color: #14b8a6 !important; color: #ffffff !important; border-color: #14b8a6 !important; }
+        #userTable_wrapper .dt-paging .dt-paging-button.disabled { color: #94a3b8 !important; background-color: #f8fafc !important; }
+        
+        /* Animasi untuk modal */
+        @keyframes modal-in { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .animate-modal-in { animation: modal-in 0.3s ease-out; }
     </style>
 </head>
 
@@ -38,28 +75,21 @@
                 <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
             </div>
             <nav class="flex flex-col space-y-2">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span>
-                </a>
-                <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-list-check text-lg"></i><span>Layanan</span>
-                </a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-cart-check text-lg"></i><span>Order</span>
-                </a>
-                <a href="{{ route('datauser') }}" class="active flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors">
-                    <i class="bi bi-people text-lg"></i><span>Karyawan</span>
-                </a>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span></a>
+                <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-list-check text-lg"></i><span>Data Layanan</span></a>
+                <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors" aria-current="page"><i class="bi bi-people text-lg"></i><span>Data Karyawan</span></a>
+                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-printer text-lg"></i><span>Laporan</span></a>
             </nav>
         </aside>
-        <div id="overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
+        
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 md:hidden hidden"></div>
 
         <main class="flex-1 overflow-y-auto">
             <div class="p-4 sm:p-6">
                 <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
                     <div class="flex items-center gap-4">
                         <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700"><i class="bi bi-list"></i></button>
-                       <h1 class="text-lg font-semibold text-slate-800">Daftar Karyawan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                        <h1 class="text-lg font-semibold text-slate-800">Daftar Karyawan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
                     </div>
                     <div class="relative">
                         <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
@@ -76,56 +106,41 @@
                         </div>
                     </div>
                 </div>
+                </header>
 
-                <section class="bg-white rounded-2xl shadow-lg p-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <h3 class="text-xl font-bold text-slate-800">👥 Daftar Karyawan</h3>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <button class="tab-btn px-4 py-2 text-sm font-semibold rounded-full" data-role="kasir">Kasir</button>
-                            <button class="tab-btn px-4 py-2 text-sm font-semibold rounded-full" data-role="driver">Driver</button>
-                            <button class="add-btn flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-teal-500 text-white shadow hover:bg-teal-600 transition active:scale-95">
-                                <i class="bi bi-plus-circle"></i> Tambah Karyawan
-                            </button>
+                <section class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-800">👥 Daftar Karyawan</h3>
+                            <p class="text-slate-500 mt-1">Kelola data kasir dan driver untuk cabang ini.</p>
+                        </div>
+                        <button class="add-btn w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-teal-500 text-white shadow-md hover:bg-teal-600 transition-all active:scale-95">
+                            <i class="bi bi-plus-circle-fill"></i> 
+                            <span>Tambah Karyawan</span>
+                        </button>
+                    </div>
+                    
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg mb-6">
+                        <div id="role-filter" class="flex items-center bg-white rounded-full p-1 text-sm self-start">
+                            <div><input type="radio" name="role" id="filter-all" value="" class="peer hidden" checked><label for="filter-all" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Semua</label></div>
+                            <div><input type="radio" name="role" id="filter-kasir" value="kasir" class="peer hidden"><label for="filter-kasir" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Kasir</label></div>
+                            <div><input type="radio" name="role" id="filter-driver" value="driver" class="peer hidden"><label for="filter-driver" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Driver</label></div>
                         </div>
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table id="userTable" class="w-full text-sm responsive-table border-separate border-spacing-y-2">
-                            <thead class="bg-slate-100 hidden md:table-header-group">
+                        <table id="userTable" class="w-full text-sm">
+                            <thead>
                                 <tr>
-                                    <th class="py-3 px-4 w-12 text-left font-semibold text-slate-600 rounded-l-lg">No</th>
-                                    <th class="py-3 px-4 text-left font-semibold text-slate-600">Nama</th>
-                                    <th class="py-3 px-4 text-left font-semibold text-slate-600">Role</th>
-                                    <th class="py-3 px-4 text-left font-semibold text-slate-600">Password Terakhir</th>
-                                    <th class="py-3 px-4 text-left font-semibold text-slate-600 rounded-r-lg w-28">Aksi</th>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>Role</th>
+                                    <th>Password Terakhir</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($users as $user)
-                                <tr data-role="{{ $user->usertype }}" class="bg-white hover:bg-slate-50 transition">
-                                    <td data-label="No" class="py-4 px-4 rounded-l-lg"></td>
-                                    <td data-label="Nama" class="py-4 px-4 font-semibold">{{ $user->name }}</td>
-                                    <td data-label="Role" class="py-4 px-4 capitalize">{{ $user->usertype }}</td>
-                                    <td data-label="Password Terakhir" class="py-4 px-4">{{ $user->plain_password ?? 'Belum Diatur' }}</td>
-                                    <td data-label="Aksi" class="py-4 px-4 rounded-r-lg">
-                                        <div class="flex gap-2">
-                                            <button class="btn-edit flex-1 px-3 py-2 rounded-md bg-orange-500 text-white shadow hover:bg-orange-600 transition" data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-usertype="{{ $user->usertype }}">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('pengguna.destroy', $user->id) }}" class="delete-form flex-1">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn-delete w-full px-3 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="5" class="text-center py-8 text-slate-500">Belum ada data karyawan di cabang ini.</td></tr>
-                                @endforelse
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </section>
@@ -133,55 +148,140 @@
         </main>
     </div>
 
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
-
-    <div id="userModal" class="modal hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-center p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg relative">
-            <button class="close-modal-btn absolute top-4 right-4 text-2xl text-slate-500 hover:text-slate-800">&times;</button>
-            <h4 id="modalTitle" class="text-xl font-bold text-slate-800 mb-4">Tambah Karyawan</h4>
+    <div id="userModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-center p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg relative animate-modal-in">
+            <button class="close-modal-btn absolute top-4 right-4 text-3xl text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+            <h4 id="modalTitle" class="text-xl font-bold text-slate-800 mb-6">Tambah Karyawan</h4>
             <form id="userForm" method="POST">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
-                
-                @if($errors->any())
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                    <p class="font-bold">Terjadi Kesalahan!</p>
-                    <ul class="mt-2 list-disc list-inside text-sm">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
                 <div class="space-y-4">
                     <div>
                         <label for="name" class="block mb-1 text-sm font-medium text-slate-700">Nama</label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}" required class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                        <input type="text" name="name" id="name" required class="form-input">
                     </div>
                     <div>
                         <label for="password" class="block mb-1 text-sm font-medium text-slate-700">Password</label>
-                        <input type="password" name="password" id="password" placeholder="Minimal 8 karakter" class="w-full px-4 py-2 border border-slate-300 rounded-lg">
+                        <input type="password" name="password" id="password" placeholder="Kosongkan jika tidak ingin mengubah" class="form-input">
                     </div>
                     <div>
                         <label for="usertype" class="block mb-1 text-sm font-medium text-slate-700">Role</label>
-                        <select name="usertype" id="usertype" required class="w-full px-4 py-2 border border-slate-300 rounded-lg">
-                            <option value="kasir" @if(old('usertype') == 'kasir') selected @endif>Kasir</option>
-                            <option value="driver" @if(old('usertype') == 'driver') selected @endif>Driver</option>
+                        <select name="usertype" id="usertype" required class="form-input">
+                            <option value="kasir">Kasir</option>
+                            <option value="driver">Driver</option>
                         </select>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" class="cancel-btn px-5 py-2 text-sm font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 transition">Batal</button>
-                    <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-lg bg-teal-500 text-white shadow hover:bg-teal-600 transition">Simpan</button>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" class="cancel-btn px-6 py-2.5 text-sm font-semibold rounded-lg bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition active:scale-95">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 text-sm font-semibold rounded-lg bg-teal-500 text-white shadow-md hover:bg-teal-600 transition active:scale-95">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    @if (session('success'))
+    <script>
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '{{ session('success') }}', showConfirmButton: false, timer: 3000 });
+    </script>
+    @endif
+    @if($errors->any())
+        <script>
+            // Buka kembali modal jika ada error validasi dari Laravel
+            document.addEventListener('DOMContentLoaded', function() {
+                const userModal = document.getElementById('userModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const userForm = document.getElementById('userForm');
+                const formMethod = document.getElementById('formMethod');
+                
+                modalTitle.innerText = "{{ session('error_modal_title', 'Periksa Kembali Isian') }}";
+                userForm.action = "{{ session('error_modal_action', '#') }}";
+                formMethod.value = "{{ session('error_modal_method', 'POST') }}";
+                
+                // Isi kembali data lama
+                document.getElementById('name').value = "{{ old('name') }}";
+                document.getElementById('usertype').value = "{{ old('usertype') }}";
+
+                // Tampilkan notifikasi error
+                let errorList = "<ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>";
+                Swal.fire({ title: 'Terjadi Kesalahan!', html: errorList, icon: 'error', confirmButtonColor: '#14b8a6' });
+
+                // Tampilkan modal
+                userModal.classList.replace('hidden', 'flex');
+            });
+        </script>
+    @endif
+
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Elemen
+    $(document).ready(function() {
+        // --- DataTable Initialization ---
+        let table = $('#userTable').DataTable({
+            dom: '<"dt-controls-row"<"dt-length"l><"dt-search"f>>t<"dt-bottom-row"<"dt-info"i><"dt-paging"p>>',
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: {
+                url: "{{ route('karyawan.data') }}",
+                type: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                data: function(d) {
+                    d.role = $('#role-filter input[name="role"]:checked').val();
+                }
+            },
+            columns: [
+                { data: 'no', name: 'no', orderable: false, searchable: false },
+                { data: 'name', name: 'name', className: 'font-semibold' },
+                { data: 'usertype', name: 'usertype', className: 'capitalize' },
+                { data: 'plain_password', name: 'plain_password' },
+                { 
+                    data: 'id',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        let editUrl = `{{ url('admin/pengguna') }}/${data}`;
+                        let deleteUrl = `{{ url('admin/pengguna') }}/${data}`;
+
+                        return `
+                            <div class="flex gap-2 justify-center">
+                                <button class="btn-edit w-9 h-9 flex items-center justify-center rounded-lg bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all" 
+                                    data-id="${data}" 
+                                    data-name="${row.name}" 
+                                    data-usertype="${row.usertype}">
+                                    <span class="sr-only">Edit</span><i class="bi bi-pencil-square"></i>
+                                </button>
+                                <form method="POST" action="${deleteUrl}" class="delete-form">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-delete w-9 h-9 flex items-center justify-center rounded-lg bg-rose-600 text-white shadow-md hover:bg-rose-700 transition-all">
+                                        <span class="sr-only">Hapus</span><i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            language: {
+                search: "",
+                searchPlaceholder: "Cari karyawan...",
+                lengthMenu: "Tampil _MENU_ entri",
+                emptyTable: `<div class="text-center p-10"><i class="bi bi-people text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Belum Ada Karyawan</h4><p class="text-slate-500">Gunakan tombol 'Tambah Karyawan' untuk membuat data baru.</p></div>`,
+                zeroRecords: `<div class="text-center p-10"><i class="bi bi-search text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Karyawan Tidak Ditemukan</h4><p class="text-slate-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p></div>`,
+                info: "Menampilkan _START_ - _END_ dari _TOTAL_ entri",
+                infoEmpty: "Menampilkan 0 entri",
+                infoFiltered: "(disaring dari _MAX_ total entri)",
+                paginate: { next: ">", previous: "<" },
+                processing: '<div class="flex items-center gap-2 text-slate-600"><svg class="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Memuat Data...</span></div>',
+            }
+        });
+
+        // --- Role Filter Event ---
+        $('#role-filter input[name="role"]').on('change', () => table.ajax.reload());
+
+        // --- Modal Handling ---
         const userModal = document.getElementById('userModal');
         const modalTitle = document.getElementById('modalTitle');
         const userForm = document.getElementById('userForm');
@@ -189,120 +289,73 @@
         const nameInput = document.getElementById('name');
         const passwordInput = document.getElementById('password');
         const usertypeInput = document.getElementById('usertype');
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const tableRows = document.querySelectorAll('#userTable tbody tr');
-        let activeRole = localStorage.getItem('activeRole') || 'kasir';
-
-        // Fungsi Modal
-        const openModal = () => { userModal.classList.remove('hidden'); userModal.classList.add('flex'); };
-        const closeModal = () => { userModal.classList.add('hidden'); userModal.classList.remove('flex'); };
-
-        const openAddForm = () => {
+        const openModal = () => userModal.classList.replace('hidden', 'flex');
+        const closeModal = () => userModal.classList.replace('flex', 'hidden');
+        
+        $('.add-btn').on('click', () => {
             userForm.reset();
             modalTitle.innerText = 'Tambah Karyawan';
             userForm.action = "{{ route('pengguna.store') }}";
             formMethod.value = 'POST';
             passwordInput.setAttribute('required', 'required');
-            usertypeInput.value = activeRole;
+            passwordInput.placeholder = "Minimal 8 karakter";
             openModal();
-        };
+        });
 
-        const openEditForm = (id, name, usertype) => {
+        $('#userTable tbody').on('click', '.btn-edit', function() {
+            const data = $(this).data();
             userForm.reset();
             modalTitle.innerText = 'Edit Karyawan';
-            userForm.action = `{{ url('admin/pengguna') }}/${id}`;
+            userForm.action = `{{ url('admin/pengguna') }}/${data.id}`;
             formMethod.value = 'PUT';
-            nameInput.value = name;
-            usertypeInput.value = usertype;
+            nameInput.value = data.name;
+            usertypeInput.value = data.usertype;
             passwordInput.removeAttribute('required');
+            passwordInput.placeholder = "Kosongkan jika tidak ingin mengubah";
             openModal();
-        };
-
-        document.querySelector('.add-btn').addEventListener('click', openAddForm);
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', () => openEditForm(btn.dataset.id, btn.dataset.name, btn.dataset.usertype));
         });
 
-        document.querySelectorAll('.close-modal-btn, .cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
-        userModal.addEventListener('click', (e) => { if(e.target === userModal) closeModal(); });
+        $('.close-modal-btn, .cancel-btn').on('click', closeModal);
 
-        // Notifikasi & Delete Confirmation
-        @if (session('success'))
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '{{ session('success') }}', showConfirmButton: false, timer: 3000 });
-        @endif
-
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-                Swal.fire({
-                    title: 'Anda yakin?', text: "Data karyawan ini akan dihapus permanen!", icon: 'warning',
-                    showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
-                }).then((result) => { if (result.isConfirmed) event.target.submit(); });
-            });
+        // --- Delete Confirmation ---
+        $('#userTable tbody').on('click', '.delete-form', function(e) {
+             e.preventDefault();
+             const form = this;
+             Swal.fire({
+                 title: 'Anda yakin?', text: 'Data karyawan ini akan dihapus permanen!', icon: 'warning',
+                 showCancelButton: true, confirmButtonColor: '#e11d48', cancelButtonColor: '#64748b',
+                 confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+             }).then((result) => { if (result.isConfirmed) form.submit(); });
         });
 
-        // Logika Tab Filter
-        const filterRows = (role) => {
-            let counter = 1;
-            tableRows.forEach(row => {
-                if (row.dataset.role === role) {
-                    row.style.display = '';
-                    if (window.innerWidth <= 768) row.style.display = 'block';
-                    row.querySelector('td[data-label="No"]').innerText = counter++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        };
-
-        const setActiveTab = (role) => {
-            activeRole = role;
-            localStorage.setItem('activeRole', activeRole);
-            tabButtons.forEach(btn => {
-                const isActive = btn.dataset.role === role;
-                btn.classList.toggle('bg-blue-600', isActive); btn.classList.toggle('text-white', isActive);
-                btn.classList.toggle('bg-slate-100', !isActive); btn.classList.toggle('text-slate-600', !isActive);
-            });
-            filterRows(activeRole);
-        };
-        tabButtons.forEach(btn => btn.addEventListener('click', () => setActiveTab(btn.dataset.role)));
-        setActiveTab(activeRole);
-        
-        // --- Buka kembali modal jika ada error validasi ---
-        @if($errors->any() && session('error_modal'))
-            @if(session('error_modal') === 'tambah')
-                openAddForm();
-            @elseif(session('error_modal') === 'edit' && session('error_id'))
-                openEditForm("{{ session('error_id') }}", "{{ old('name') }}", "{{ old('usertype') }}");
-            @endif
-        @endif
-        
-        // UI Scripts
+        // --- UI Logic (Sidebar, User Menu) ---
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const toggleSidebar = () => { sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden'); }
-        hamburgerBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-        
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
         const userMenuButton = document.getElementById('user-menu-button');
         const userMenu = document.getElementById('user-menu');
         const logoutButton = document.getElementById('logout-button');
-        userMenuButton.addEventListener('click', () => userMenu.classList.toggle('hidden'));
+        const toggleSidebar = () => {
+            sidebar.classList.toggle('-translate-x-full');
+            sidebarOverlay.classList.toggle('hidden');
+        };
+        hamburgerBtn.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+        userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('hidden'); });
         window.addEventListener('click', (e) => {
-            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) userMenu.classList.add('hidden');
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
         });
         logoutButton.addEventListener('click', (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
             Swal.fire({
-                title: 'Anda yakin ingin logout?', icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Logout!', cancelButtonText: 'Batal'
+                title: 'Konfirmasi Logout', text: "Apakah Anda yakin ingin keluar?", icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#14b8a6', cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, keluar!', cancelButtonText: 'Batal'
             }).then((result) => { if (result.isConfirmed) logoutButton.closest('form').submit(); });
         });
     });
     </script>
 </body>
 </html>
-

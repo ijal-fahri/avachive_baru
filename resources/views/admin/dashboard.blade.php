@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Admin - Avachive</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
-    <style>
+    <style> 
         body { font-family: 'Poppins', sans-serif; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -43,13 +42,13 @@
                     <i class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span>
                 </a>
                 <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-list-check text-lg"></i><span>Layanan</span>
-                </a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-cart-check text-lg"></i><span>Order</span>
+                    <i class="bi bi-list-check text-lg"></i><span>Data Layanan</span>
                 </a>
                 <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-people text-lg"></i><span>Karyawan</span>
+                    <i class="bi bi-people text-lg"></i><span>Data Karyawan</span>
+                </a>
+                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                    <i class="bi bi-printer text-lg"></i><span>Laporan</span>
                 </a>
             </nav>
         </aside>
@@ -60,7 +59,7 @@
                 <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
                     <div class="flex items-center gap-4">
                         <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700"><i class="bi bi-list"></i></button>
-                        <h1 class="text-lg font-semibold text-slate-800">Dashboard Admin Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                        <h1 class="text-lg font-semibold text-slate-800">Dashboard Admin Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Pusat' }}</h1>
                     </div>
                     <div class="relative">
                         <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
@@ -101,7 +100,7 @@
                         <h3 class="text-xl font-bold text-slate-800 mb-4"><i class="bi bi-bar-chart-line-fill text-blue-600"></i> Statistik Pesanan {{ now()->year }}</h3>
                         <div class="relative h-80"><canvas id="orderChart"></canvas></div>
                     </section>
-                     <section class="bg-gradient-to-br from-teal-400 to-blue-500 text-white p-6 rounded-2xl shadow-lg flex flex-col">
+                       <section class="bg-gradient-to-br from-teal-400 to-blue-500 text-white p-6 rounded-2xl shadow-lg flex flex-col">
                         <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="bi bi-info-circle-fill"></i> Info Cabang</h3>
                         <div class="space-y-4">
                             <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
@@ -195,7 +194,7 @@
             const logoutButton = document.getElementById('logout-button');
 
             const toggleSidebar = () => {
-                sidebar.classList.toggle('-translate-x-full');
+                sidebar.classList.toggle('sidebar-mobile-open');
                 overlay.classList.toggle('hidden');
             }
             hamburgerBtn.addEventListener('click', toggleSidebar);
@@ -211,8 +210,8 @@
             logoutButton.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 Swal.fire({
-                    title: 'Anda yakin ingin logout?', icon: 'warning', showCancelButton: true,
-                    confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
+                    title: 'Anda yakin ingin logout?', icon: 'question', showCancelButton: true,
+                    confirmButtonColor: '#14b8a6', cancelButtonColor: '#64748b',
                     confirmButtonText: 'Ya, Logout!', cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) logoutButton.closest('form').submit();
@@ -250,8 +249,8 @@
                 } catch (e) { layananHTML = '<p>Gagal memuat detail layanan.</p>'; }
 
                 const tglSelesai = new Date(order.waktu_pembayaran).getTime() > 0 
-                                 ? new Date(order.waktu_pembayaran).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short'})
-                                 : (order.status === 'Selesai' ? new Date(order.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short'}) : '-');
+                                    ? new Date(order.waktu_pembayaran).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short'})
+                                    : (order.status === 'Selesai' ? new Date(order.updated_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short'}) : '-');
 
                 modalBody.innerHTML = `
                     <div class="space-y-1 text-slate-700">
@@ -291,4 +290,3 @@
     </script>
 </body>
 </html>
-

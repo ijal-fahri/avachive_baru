@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Laporan | Avachive</title>
+    <title>Data Cabang & Laporan | Avachive</title>
 
     {{-- Aset-aset (CSS & JS Libraries) --}}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
       body { font-family: 'Poppins', sans-serif; }
       .sidebar-mobile-open { transform: translateX(0) !important; }
@@ -45,9 +45,9 @@
                 <nav class="space-y-3">
                     <a href="{{ route('owner.dashboard') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-grid-1x2-fill mr-4 text-lg"></i><span class="font-medium">Dashboard</span></a>
                     <a href="{{ route('owner.manage') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-receipt-cutoff mr-4 text-lg"></i><span class="font-medium">Manajemen Order</span></a>
+                    <a href="{{ route('owner.laporan.index') }}" class="flex items-center py-3 px-4 rounded-lg bg-teal-400 text-slate-900 font-semibold shadow-lg"><i class="bi bi-shop-window mr-4 text-lg"></i><span class="font-medium">Data Cabang</span></a>
                     <a href="{{ route('owner.dataadmin.index') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-person-badge-fill mr-4 text-lg"></i><span class="font-medium">Data Admin</span></a>
                     <a href="{{ route('owner.datakaryawan.index') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-people-fill mr-4 text-lg"></i><span class="font-medium">Data Karyawan</span></a>
-                    <a href="{{ route('owner.laporan.index') }}" class="flex items-center py-3 px-4 rounded-lg bg-teal-400 text-slate-900 font-semibold shadow-lg"><i class="bi bi-graph-up-arrow mr-4 text-lg"></i><span class="font-medium">Laporan</span></a>
                 </nav>
             </div>
         </aside>
@@ -57,7 +57,7 @@
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                  <div class="flex items-center gap-4">
                   <button id="menu-btn" class="text-slate-800 text-2xl md:hidden"><i class="bi bi-list"></i></button>
-                  <h1 class="text-xl font-semibold text-slate-800">Laporan Keuangan & Cabang</h1>
+                  <h1 class="text-xl font-semibold text-slate-800">Data Cabang & Laporan</h1>
                 </div>
                 <div class="relative">
                     <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all">
@@ -205,7 +205,7 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0" id="modalContent">
           <div class="flex justify-between items-center border-b pb-3 mb-4">
             <h3 class="text-lg font-bold text-slate-800">Detail Order #<span id="modalOrderId"></span></h3>
-            <button id="closeModalBtn" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+            <button id="closeModalBtn" class="text-slate-500 hover:text-slate-800 text-2xl">×</button>
           </div>
           <div id="modalBody" class="space-y-3 text-sm"></div>
         </div>
@@ -325,8 +325,8 @@
 
             // PERBAIKAN LOGIKA TANGGAL SELESAI DI SINI
             const tglSelesai = trx.waktu_pembayaran && dayjs(trx.waktu_pembayaran).isValid() 
-                             ? dayjs(trx.waktu_pembayaran).format('DD MMMM YYYY') 
-                             : (trx.status == 'Selesai' && trx.updated_at ? dayjs(trx.updated_at).format('DD MMMM YYYY') : '-');
+                                ? dayjs(trx.waktu_pembayaran).format('DD MMMM YYYY') 
+                                : (trx.status == 'Selesai' && trx.updated_at ? dayjs(trx.updated_at).format('DD MMMM YYYY') : '-');
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-1"><p><strong>Nama Pelanggan:</strong> ${trx.pelanggan?.nama || 'N/A'}</p><p><strong>No. Telepon:</strong> ${trx.pelanggan?.no_handphone || 'N/A'}</p><p><strong>Asal Cabang:</strong> ${trx.cabang?.nama_cabang || 'N/A'}</p></div><hr class="my-3"/>
@@ -395,7 +395,7 @@
             if(data){
                 document.getElementById('detailNamaCabang').textContent = data.nama_cabang;
                 document.getElementById('detailAlamatCabang').textContent = data.alamat;
-                document.getElementById('btnLihatMaps').href = `https://maps.google.com/?q=${encodeURIComponent(data.alamat)}`;
+                document.getElementById('btnLihatMaps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.alamat)}`;
             }
         });
 
@@ -458,4 +458,3 @@
     </script>
 </body>
 </html>
-

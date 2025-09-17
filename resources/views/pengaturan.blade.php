@@ -43,15 +43,15 @@
                 </a>
                 <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
                     <i class="bi bi-list-check text-lg"></i>
-                    <span>Layanan</span>
-                </a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-cart-check text-lg"></i>
-                    <span>Order</span>
+                    <span>Data Layanan</span>
                 </a>
                 <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
                     <i class="bi bi-people text-lg"></i>
-                    <span>Karyawan</span>
+                    <span>Data Karyawan</span>
+                </a>
+                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
+                    <i class="bi bi-printer text-lg"></i>
+                    <span>Laporan</span>
                 </a>
             </nav>
         </aside>
@@ -102,10 +102,10 @@
                     <section class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="bi bi-question-circle text-blue-600"></i> Cara Menggunakan Aplikasi</h3>
                         <ul class="list-disc list-inside space-y-2 text-slate-600 leading-relaxed">
-                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Layanan</strong> untuk menambah atau mengatur jenis laundry.</li>
-                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Order</strong> untuk melihat dan mengelola transaksi pelanggan.</li>
-                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Karyawan</strong> untuk menambahkan atau mengedit data karyawan.</li>
-                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Pengaturan</strong> ini untuk melihat profil Anda.</li>
+                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Data Layanan</strong> untuk menambah atau mengatur jenis laundry.</li>
+                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Data Karyawan</strong> untuk menambahkan atau mengedit data karyawan.</li>
+                            <li>Gunakan halaman <strong class="font-semibold text-slate-700">Laporan</strong> untuk melihat ringkasan pemasukan.</li>
+                            <li>Gunakan <strong class="font-semibold text-slate-700">menu Profile</strong> di pojok kanan atas untuk kembali ke halaman ini.</li>
                         </ul>
                     </section>
 
