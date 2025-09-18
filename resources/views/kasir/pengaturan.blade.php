@@ -132,16 +132,20 @@
 
             <div class="pb-20 pt-20 lg:pt-6 max-w-4xl mx-auto space-y-8 mt-4">
                 <section class="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i
-                            class="bi bi-person-circle text-blue-600"></i> Profil Anda</h3>
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="bi bi-person-circle text-blue-600"></i> Profil Anda
+                    </h3>
                     <div class="flex flex-col sm:flex-row items-center gap-6">
                         @if (Auth::user()->profile_photo)
-                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                            <img id="profilePhoto"
+                                src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
                                 alt="Foto Profil"
-                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover">
+                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover cursor-pointer">
                         @else
-                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
-                                alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md">
+                            <img id="profilePhoto"
+                                src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
+                                alt="Foto Profil"
+                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md cursor-pointer">
                         @endif
                         <div class="text-center sm:text-left">
                             <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
@@ -262,6 +266,23 @@
         </div>
     </div>
 
+    <!-- Modal Preview Foto Profil -->
+    <div id="photoPreviewModal"
+        class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 relative max-w-xs w-full flex flex-col items-center">
+            <button id="closePhotoPreviewBtn"
+                class="absolute top-2 right-3 text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            @if (Auth::user()->profile_photo)
+                <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
+                    class="w-48 h-48 rounded-full object-cover border-4 border-teal-400 shadow-md">
+            @else
+                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=256&bold=true"
+                    alt="Foto Profil" class="w-48 h-48 rounded-full border-4 border-teal-400 shadow-md">
+            @endif
+            <div class="mt-4 text-center text-lg font-semibold text-slate-800">{{ Auth::user()->name }}</div>
+        </div>
+    </div>
+
     <div id="overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
 
     <script>
@@ -354,6 +375,23 @@
             profileModal.addEventListener('click', (e) => {
                 if (e.target === profileModal) closeModal(profileModal, profileModalContent);
             });
+
+            // Foto Profil Preview Modal
+            const profilePhoto = document.getElementById('profilePhoto');
+            const photoPreviewModal = document.getElementById('photoPreviewModal');
+            const closePhotoPreviewBtn = document.getElementById('closePhotoPreviewBtn');
+
+            if (profilePhoto && photoPreviewModal && closePhotoPreviewBtn) {
+                profilePhoto.addEventListener('click', () => {
+                    photoPreviewModal.classList.remove('hidden');
+                });
+                closePhotoPreviewBtn.addEventListener('click', () => {
+                    photoPreviewModal.classList.add('hidden');
+                });
+                photoPreviewModal.addEventListener('click', (e) => {
+                    if (e.target === photoPreviewModal) photoPreviewModal.classList.add('hidden');
+                });
+            }
 
             // Handle window resize
             window.addEventListener('resize', function() {

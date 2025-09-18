@@ -35,6 +35,8 @@ use App\Http\Controllers\kasir\KasirRiwayatOrderController;
 use App\Http\Controllers\driver\DriverPengaturanController;
 use App\Http\Controllers\driver\DriverRiwayatController;
 
+// Pelanggan Controllers
+use App\Http\Controllers\pelanggan\HomePelangganController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,12 +112,18 @@ Route::middleware('auth')->group(function () {
     // --- GRUP ROUTE UNTUK DRIVER ---
     Route::middleware('driver')->prefix('driver')->group(function () {
         Route::get('/dashboard', [DriverController::class, 'index'])->name('driver.dashboard');
-        //Driver
         Route::post('/pengiriman/{id}/lunaskan', [DriverController::class, 'lunaskanPembayaran'])->name('driver.order.lunaskan');
         Route::resource('/riwayat', DriverRiwayatController::class);
-        Route::resource('/pengaturan', DriverPengaturanController::class);
+        Route::get('/pengaturan', [DriverPengaturanController::class, 'index'])->name('driver.pengaturan.index');
+        Route::put('/pengaturan/{id}', [DriverPengaturanController::class, 'update'])->name('driver.pengaturan.update');
         Route::post('/pengiriman/{id}/update-status', [DriverController::class, 'orderSelesai'])->name('driver.order.update-status');
     });
+
+    // route untuk pelanggan 
+    Route::middleware(['auth', 'pelanggan'])->prefix('pelanggan')->group(function () {
+    Route::get('/home', [HomePelangganController::class, 'index'])->name('pelanggan.home');
+    // Tambahkan route lain khusus pelanggan di sini
+});
 
 });
 Route::middleware(['auth', 'owner'])->prefix('owner')->name('owner.')->group(function () {

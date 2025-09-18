@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'kasir' => \App\Http\Middleware\Kasir::class,
             'driver' => \App\Http\Middleware\Driver::class,
             'owner' => \App\Http\Middleware\Owner::class,
+            'pelanggan' => \App\Http\Middleware\Pelanggan::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

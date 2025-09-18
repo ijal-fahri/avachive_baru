@@ -12,20 +12,47 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        .sidebar-mobile-open { transform: translateX(0) !important; }
         .table-wrapper::-webkit-scrollbar { height: 8px; }
         .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; }
         .table-wrapper::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        
+        /* ===== [ PENYEMPURNAAN KODE RESPONSIVE ] ===== */
         @media (max-width: 767px) {
             .responsive-table thead { display: none; }
             .responsive-table tbody, .responsive-table tr { display: block; width: 100%; }
-            .responsive-table tr { margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05); }
-            .responsive-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0.25rem; text-align: right; border-bottom: 1px solid #f1f5f9; }
+            .responsive-table tr { 
+                margin-bottom: 1rem; 
+                border: 1px solid #e2e8f0; 
+                border-radius: 0.75rem; 
+                padding: 1rem; 
+                box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+                transition: all 0.2s ease-in-out;
+            }
+            .responsive-table tr:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px 0 rgb(0 0 0 / 0.07);
+            }
+            .responsive-table td { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                padding: 0.75rem 0.25rem; 
+                text-align: right; 
+                border-bottom: 1px solid #f1f5f9;
+                color: #1e293b;
+                font-weight: 500;
+            }
             .responsive-table td:last-child { border-bottom: none; }
-            .responsive-table td::before { content: attr(data-label); font-weight: 600; text-align: left; color: #475569; margin-right: 1rem; }
+            .responsive-table td::before { 
+                content: attr(data-label); 
+                font-weight: 600; 
+                text-align: left; 
+                color: #475569;
+                margin-right: 1rem; 
+            }
             .responsive-table td[data-label="Aksi"] { justify-content: center; padding-top: 1rem; }
             .responsive-table td[data-label="Aksi"]::before { display: none; }
         }
@@ -33,7 +60,7 @@
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 flex flex-col">
+        <aside class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
             <div>
                 <div class="flex flex-col items-center text-center mb-10">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
@@ -52,7 +79,6 @@
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                 <div class="flex items-center gap-4">
-                    <button id="menu-btn" class="text-slate-800 text-2xl md:hidden"><i class="bi bi-list"></i></button>
                     <h1 class="text-xl font-semibold text-slate-800">Manajemen Order</h1>
                 </div>
                 <div class="relative">
@@ -71,7 +97,7 @@
                 </div>
             </header>
 
-            <main class="px-4 md:px-6 pb-6 mt-8">
+            <main class="px-4 md:px-6 pb-28 md:pb-6 mt-8">
                 <div class="bg-white p-4 rounded-xl shadow-md mb-6">
                     <form action="{{ route('owner.manage') }}" method="GET">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -81,26 +107,27 @@
                             </div>
                             <div class="relative w-full md:w-auto">
                                 <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" name="search" placeholder="Cari ID atau nama..." value="{{ $searchQuery }}" class="pl-10 pr-4 py-2 w-full sm:w-64 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400">
+                                <input type="text" name="search" placeholder="Cari ID atau nama..." value="{{ request('search') }}" class="pl-10 pr-4 py-2 w-full sm:w-64 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400">
+                                <button type="submit" class="hidden"></button> 
                             </div>
                         </div>
                     </form>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-                    <a href="{{ route('owner.manage', ['status' => 'Diproses']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Diproses' ? 'ring-2 ring-teal-400' : '' }}">
+                    <a href="{{ $filterStatus == 'Diproses' ? route('owner.manage') : route('owner.manage', ['status' => 'Diproses']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Diproses' ? 'ring-2 ring-teal-400' : '' }}">
                         <div class="bg-orange-100 p-3 rounded-full"><i class="bi bi-arrow-repeat text-orange-600 text-2xl"></i></div>
                         <div><p class="text-sm text-slate-500">Order Proses</p><p class="text-2xl font-bold text-slate-800">{{ $statusCounts['Diproses'] ?? 0 }}</p></div>
                     </a>
-                     <a href="{{ route('owner.manage', ['status' => 'Siap diantar']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Siap diantar' ? 'ring-2 ring-teal-400' : '' }}">
+                     <a href="{{ $filterStatus == 'Siap diantar' ? route('owner.manage') : route('owner.manage', ['status' => 'Siap diantar']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Siap diantar' ? 'ring-2 ring-teal-400' : '' }}">
                         <div class="bg-purple-100 p-3 rounded-full"><i class="bi bi-truck text-purple-600 text-2xl"></i></div>
                         <div><p class="text-sm text-slate-500">Siap Diantar</p><p class="text-2xl font-bold text-slate-800">{{ $statusCounts['Siap diantar'] ?? 0 }}</p></div>
                     </a>
-                     <a href="{{ route('owner.manage', ['status' => 'Siap diambil']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Siap diambil' ? 'ring-2 ring-teal-400' : '' }}">
+                     <a href="{{ $filterStatus == 'Siap diambil' ? route('owner.manage') : route('owner.manage', ['status' => 'Siap diambil']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Siap diambil' ? 'ring-2 ring-teal-400' : '' }}">
                         <div class="bg-indigo-100 p-3 rounded-full"><i class="bi bi-person-walking text-indigo-600 text-2xl"></i></div>
                         <div><p class="text-sm text-slate-500">Siap Diambil</p><p class="text-2xl font-bold text-slate-800">{{ $statusCounts['Siap diambil'] ?? 0 }}</p></div>
                     </a>
-                    <a href="{{ route('owner.manage', ['status' => 'Selesai']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Selesai' ? 'ring-2 ring-teal-400' : '' }}">
+                    <a href="{{ $filterStatus == 'Selesai' ? route('owner.manage') : route('owner.manage', ['status' => 'Selesai']) }}" class="report-card bg-white p-4 rounded-xl shadow-md flex items-center gap-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 {{ $filterStatus == 'Selesai' ? 'ring-2 ring-teal-400' : '' }}">
                         <div class="bg-green-100 p-3 rounded-full"><i class="bi bi-check2-circle text-green-600 text-2xl"></i></div>
                         <div><p class="text-sm text-slate-500">Order Selesai</p><p class="text-2xl font-bold text-slate-800">{{ $statusCounts['Selesai'] ?? 0 }}</p></div>
                     </a>
@@ -123,9 +150,9 @@
                             <tbody id="ordersTableBody">
                                 @forelse ($orders as $order)
                                 <tr class="hover:bg-slate-50">
-                                    <td data-label="ID Order" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">#{{ $order->id }}</td>
+                                    <td data-label="ID Order" class="px-6 py-4 font-bold text-slate-900 whitespace-nowrap">#{{ $order->id }}</td>
                                     <td data-label="Pelanggan" class="px-6 py-4">{{ $order->pelanggan->nama ?? 'N/A' }}</td>
-                                    <td data-label="Cabang" class="px-6 py-4 font-medium">{{ $order->cabang->nama_cabang ?? 'N/A' }}</td>
+                                    <td data-label="Cabang" class="px-6 py-4 font-semibold">{{ $order->cabang->nama_cabang ?? 'N/A' }}</td>
                                     <td data-label="Tanggal Masuk" class="px-6 py-4">{{ \Carbon\Carbon::parse($order->created_at)->translatedFormat('d M Y') }}</td>
                                     <td data-label="Pengambilan" class="px-6 py-4">{{ $order->metode_pengambilan }}</td>
                                     <td data-label="Status" class="px-6 py-4">
@@ -157,18 +184,40 @@
             </main>
         </div>
     </div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden"></div>
 
     {{-- MODAL DETAIL --}}
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0" id="modalContent">
-          <div class="flex justify-between items-center border-b pb-3 mb-4">
-            <h3 class="text-lg font-bold text-slate-800">Detail Order #<span id="modalOrderId"></span></h3>
-            <button id="closeModalBtn" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
-          </div>
-          <div id="modalBody" class="space-y-3 text-sm"></div>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Detail Order #<span id="modalOrderId"></span></h3>
+                <button id="closeModalBtn" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+            </div>
+            <div id="modalBody" class="space-y-3 text-sm"></div>
         </div>
     </div>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+        <a href="{{ route('owner.dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-grid-1x2-fill text-2xl"></i>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
+            <i class="bi bi-receipt-cutoff text-2xl"></i>
+            <span class="text-xs">Order</span>
+        </a>
+        <a href="{{ route('owner.laporan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-shop-window text-2xl"></i>
+            <span class="text-xs">Cabang</span>
+        </a>
+        <a href="{{ route('owner.dataadmin.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-person-badge-fill text-2xl"></i>
+            <span class="text-xs">Admin</span>
+        </a>
+        <a href="{{ route('owner.datakaryawan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-people-fill text-2xl"></i>
+            <span class="text-xs">Karyawan</span>
+        </a>
+    </nav>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -202,7 +251,7 @@
                             const harga = s.harga ? parseInt(s.harga).toLocaleString('id-ID') : 'N/A';
                             return `<li>${s.kuantitas || 1}x ${s.nama || 'Layanan tidak diketahui'} - Rp ${harga}</li>`;
                         }).join('');
-                        servicesHtml = `<ul class="list-disc list-inside">${servicesHtml}</ul>`;
+                        servicesHtml = `<ul class="list-disc list-inside text-slate-700">${servicesHtml}</ul>`;
                     }
                 } catch (e) { 
                     servicesHtml = 'Format data layanan tidak valid.';
@@ -210,24 +259,30 @@
             }
 
             modalBody.innerHTML = `
-                <p><strong>Nama Pelanggan:</strong> ${order.pelanggan ? order.pelanggan.nama : 'N/A'}</p>
-                <p><strong>No. Telepon:</strong> ${order.pelanggan ? order.pelanggan.no_handphone : 'N/A'}</p>
-                <p><strong>Asal Cabang:</strong> ${order.cabang ? order.cabang.nama_cabang : 'N/A'}</p>
-                <p><strong>Tanggal Order:</strong> ${dayjs(order.created_at).format('DD MMMM YYYY')}</p>
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                    <strong class="col-span-1 text-slate-500">Pelanggan</strong><span class="col-span-2 text-slate-800 font-medium">: ${order.pelanggan ? order.pelanggan.nama : 'N/A'}</span>
+                    <strong class="col-span-1 text-slate-500">No. Telepon</strong><span class="col-span-2 text-slate-800 font-medium">: ${order.pelanggan ? order.pelanggan.no_handphone : 'N/A'}</span>
+                    <strong class="col-span-1 text-slate-500">Asal Cabang</strong><span class="col-span-2 text-slate-800 font-medium">: ${order.cabang ? order.cabang.nama_cabang : 'N/A'}</span>
+                    <strong class="col-span-1 text-slate-500">Tgl. Order</strong><span class="col-span-2 text-slate-800 font-medium">: ${dayjs(order.created_at).format('DD MMMM YYYY')}</span>
+                </div>
                 <hr class="my-3"/>
-                <p><strong>Detail Layanan:</strong></p>
-                <div>${servicesHtml}</div>
-                <p><strong>Total Biaya:</strong> Rp ${parseInt(order.total_harga).toLocaleString('id-ID')}</p>
+                <div>
+                    <strong class="text-slate-500">Detail Layanan:</strong>
+                    <div class="mt-1">${servicesHtml}</div>
+                </div>
+                <p><strong class="text-slate-500">Total Biaya:</strong> <span class="font-bold text-lg text-teal-500">Rp ${parseInt(order.total_harga).toLocaleString('id-ID')}</span></p>
                 <hr class="my-3"/>
-                <p><strong>Metode Pengambilan:</strong> ${order.metode_pengambilan}</p>
-                <p><strong>Status Saat Ini:</strong> ${statusBadge(order.status)}</p>
+                <div class="flex justify-between items-center">
+                    <p><strong class="text-slate-500">Pengambilan:</strong> <span class="font-medium text-slate-800">${order.metode_pengambilan}</span></p>
+                    ${statusBadge(order.status)}
+                </div>
             `;
             detailModal.classList.remove('hidden');
             setTimeout(() => { modalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
         };
         const closeModal = () => {
             modalContent.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => { detailModal.classList.add('hidden'); }, 200);
+            setTimeout(() => { detailModal.classList.add('hidden'); }, 300);
         };
         closeModalBtn.addEventListener('click', closeModal);
         detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeModal(); });
@@ -245,17 +300,7 @@
             }
         });
 
-        // --- UI Scripts (Sidebar & Profile) ---
-        const menuBtn = document.getElementById('menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const toggleSidebar = () => {
-            sidebar.classList.toggle('sidebar-mobile-open');
-            overlay.classList.toggle('hidden');
-        };
-        menuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-
+        // --- Profile Dropdown Script ---
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
         profileDropdownBtn.addEventListener('click', () => {

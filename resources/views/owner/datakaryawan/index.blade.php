@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Manajemen Karyawan | Avachive</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,10 +16,9 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        .sidebar-mobile-open { transform: translateX(0) !important; }
         
         /* STYLING KONSISTEN UNTUK DATATABLES */
         .form-input, 
@@ -48,14 +47,33 @@
         #karyawanTable_wrapper .dt-paging .dt-paging-button:not(.disabled):hover { background-color: #f1f5f9 !important; border-color: #94a3b8 !important; }
         #karyawanTable_wrapper .dt-paging .dt-paging-button.current { background-color: #14b8a6 !important; color: #ffffff !important; border-color: #14b8a6 !important; }
         #karyawanTable_wrapper .dt-paging .dt-paging-button.disabled { color: #94a3b8 !important; background-color: #f8fafc !important; }
+        
         @keyframes modal-in { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .animate-modal-in { animation: modal-in 0.3s ease-out; }
+        
+        /* Custom Styling untuk Loading Overlay DataTables */
+        #karyawanTable_wrapper .dataTables_processing {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            box-shadow: none;
+            margin-top: 0 !important;
+            padding: 0 !important;
+        }
     </style>
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        {{-- ===== SIDEBAR ===== --}}
-        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 flex flex-col">
+        {{-- ===== SIDEBAR (Desktop Only)===== --}}
+        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
             <div>
                 <div class="flex flex-col items-center text-center mb-10">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
@@ -76,7 +94,6 @@
             {{-- ===== HEADER ===== --}}
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                 <div class="flex items-center gap-4">
-                    <button id="menu-btn" class="text-slate-800 text-2xl md:hidden"><i class="bi bi-list"></i></button>
                     <h1 class="text-xl font-semibold text-slate-800">Manajemen Karyawan</h1>
                 </div>
                 <div class="flex items-center gap-4">
@@ -100,7 +117,7 @@
                 </div>
             </header>
             
-            <main class="w-full px-4 md:px-6 pb-6 mt-8">
+            <main class="w-full px-4 md:px-6 pb-28 md:pb-6 mt-8">
                 @if (session('success'))
                     <div id="success-alert" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded-lg" role="alert"><p>{{ session('success') }}</p></div>
                 @endif
@@ -136,6 +153,7 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
+                                    <th>Foto</th>
                                     <th>Nama</th>
                                     <th>Cabang</th>
                                     <th>Role</th>
@@ -144,14 +162,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </section>
             </main>
         </div>
     </div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden"></div>
 
     {{-- MODAL TAMBAH/EDIT KARYAWAN --}}
     <div id="karyawanFormModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center p-4">
@@ -164,6 +181,19 @@
                     <button type="button" class="close-modal-btn text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
                 </div>
                 <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Foto Profil</label>
+                        <div class="flex items-center gap-4">
+                            <img id="imagePreview" src="https://ui-avatars.com/api/?name=?&background=e2e8f0&color=64748b" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                            <div class="opacity-50">
+                                <label for="profile_photo_dummy" class="cursor-not-allowed bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm">
+                                    Pilih Foto
+                                </label>
+                                <input type="file" id="profile_photo_dummy" class="hidden" disabled>
+                                <p class="text-xs text-slate-500 mt-2">Fitur ini belum tersedia.</p>
+                            </div>
+                        </div>
+                    </div>
                     <div>
                         <label for="name" class="block text-sm font-medium text-slate-600 mb-1">Nama Karyawan</label>
                         <input type="text" id="name" name="name" class="form-input" required>
@@ -198,6 +228,29 @@
             </form>
         </div>
     </div>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+        <a href="{{ route('owner.dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-grid-1x2-fill text-2xl"></i>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-receipt-cutoff text-2xl"></i>
+            <span class="text-xs">Order</span>
+        </a>
+        <a href="{{ route('owner.laporan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-shop-window text-2xl"></i>
+            <span class="text-xs">Cabang</span>
+        </a>
+        <a href="{{ route('owner.dataadmin.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-person-badge-fill text-2xl"></i>
+            <span class="text-xs">Admin</span>
+        </a>
+        <a href="{{ route('owner.datakaryawan.index') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
+            <i class="bi bi-people-fill text-2xl"></i>
+            <span class="text-xs">Karyawan</span>
+        </a>
+    </nav>
 
     @if (session('success'))
     <script>
@@ -247,6 +300,15 @@
             },
             columns: [
                 { data: 'no', name: 'no', orderable: false, searchable: false },
+                { 
+                    data: 'name', 
+                    name: 'foto', 
+                    orderable: false, 
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(data)}&background=14b8a6&color=fff&size=40" alt="${data}" class="w-10 h-10 rounded-full object-cover">`;
+                    }
+                },
                 { data: 'name', name: 'name', className: 'font-semibold' },
                 { data: 'nama_cabang', name: 'cabang.nama_cabang' },
                 { data: 'usertype', name: 'usertype', className: 'capitalize' },
@@ -306,7 +368,13 @@
                 infoEmpty: "Menampilkan 0 entri",
                 infoFiltered: "(disaring dari _MAX_ total entri)",
                 paginate: { next: ">", previous: "<" },
-                processing: '<div class="flex items-center gap-2 text-slate-600"><svg class="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Memuat Data...</span></div>',
+                // Mengganti teks loading default dengan animasi logo kustom
+                processing: `
+                    <div class="flex flex-col items-center justify-center">
+                        <img src="{{ asset('images/logo.png') }}" alt="Memuat..." class="h-16 w-16 rounded-full animate-spin mb-4">
+                        <span class="text-slate-600 font-semibold">Memuat Data...</span>
+                    </div>
+                `,
             }
         });
 
@@ -316,6 +384,7 @@
         const modalTitle = document.getElementById('modalTitle');
         const formMethodInput = document.getElementById('formMethod');
         const passwordHint = document.getElementById('password-hint');
+        const imagePreview = document.getElementById('imagePreview');
 
         const openModal = (mode, data = {}) => {
             karyawanForm.reset();
@@ -325,6 +394,7 @@
                 formMethodInput.value = 'POST';
                 document.getElementById('password').setAttribute('required', 'true');
                 passwordHint.style.display = 'none';
+                imagePreview.src = "https://ui-avatars.com/api/?name=?&background=e2e8f0&color=64748b";
             } else {
                 modalTitle.textContent = 'Ubah Data Karyawan';
                 karyawanForm.action = `{{ url('owner/datakaryawan') }}/${data.id}`;
@@ -334,11 +404,12 @@
                 $('#usertype_modal').val(data.usertype);
                 document.getElementById('password').removeAttribute('required');
                 passwordHint.style.display = 'block';
+                imagePreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=14b8a6&color=fff`;
             }
-            karyawanFormModal.classList.remove('hidden');
+            karyawanFormModal.classList.replace('hidden', 'flex');
         };
 
-        const closeModal = () => karyawanFormModal.classList.add('hidden');
+        const closeModal = () => karyawanFormModal.classList.replace('flex', 'hidden');
 
         $('#addKaryawanBtn').on('click', () => openModal('add'));
         $('.close-modal-btn, .cancel-btn').on('click', closeModal);
@@ -376,13 +447,6 @@
         $('#cabangFilter, #roleFilter').on('change', () => karyawanTable.ajax.reload());
 
         // --- UI Scripts ---
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const menuBtn = document.getElementById('menu-btn');
-        const toggleSidebar = () => { sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden'); };
-        menuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
         profileDropdownBtn.addEventListener('click', () => profileDropdownMenu.classList.toggle('hidden'));

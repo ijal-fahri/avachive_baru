@@ -15,10 +15,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
       body { font-family: 'Poppins', sans-serif; }
-      .sidebar-mobile-open { transform: translateX(0) !important; }
       @media (max-width: 767px) {
         .responsive-table thead { display: none; }
         .responsive-table tbody, .responsive-table tr { display: block; width: 100%; }
@@ -34,8 +33,8 @@
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        {{-- ===== SIDEBAR ===== --}}
-        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 flex flex-col">
+        {{-- ===== SIDEBAR (Desktop Only) ===== --}}
+        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
             <div>
                 <div class="flex flex-col items-center text-center mb-10">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
@@ -56,7 +55,6 @@
             {{-- ===== HEADER ===== --}}
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                  <div class="flex items-center gap-4">
-                  <button id="menu-btn" class="text-slate-800 text-2xl md:hidden"><i class="bi bi-list"></i></button>
                   <h1 class="text-xl font-semibold text-slate-800">Data Cabang & Laporan</h1>
                 </div>
                 <div class="relative">
@@ -75,7 +73,7 @@
                 </div>
             </header>
             
-            <main class="px-4 md:px-6 pb-6 mt-8">
+            <main class="px-4 md:px-6 pb-28 md:pb-6 mt-8">
                 @if (session('success'))
                     <div id="success-alert" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded-lg shadow-md" role="alert"><p>{{ session('success') }}</p></div>
                 @endif
@@ -198,7 +196,6 @@
             </main>
         </div>
     </div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden"></div>
 
     {{-- ===== MODAL DETAIL TRANSAKSI ===== --}}
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center p-4">
@@ -254,6 +251,29 @@
         </div>
     </div>
 
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+        <a href="{{ route('owner.dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-grid-1x2-fill text-2xl"></i>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-receipt-cutoff text-2xl"></i>
+            <span class="text-xs">Order</span>
+        </a>
+        <a href="{{ route('owner.laporan.index') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
+            <i class="bi bi-shop-window text-2xl"></i>
+            <span class="text-xs">Cabang</span>
+        </a>
+        <a href="{{ route('owner.dataadmin.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-person-badge-fill text-2xl"></i>
+            <span class="text-xs">Admin</span>
+        </a>
+        <a href="{{ route('owner.datakaryawan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-people-fill text-2xl"></i>
+            <span class="text-xs">Karyawan</span>
+        </a>
+    </nav>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // === DATA DARI CONTROLLER LARAVEL ===
@@ -265,16 +285,18 @@
         
         // === FUNGSI SETUP CHARTS ===
         const setupCharts = () => {
+            // Chart Tren Pendapatan
             const revCtx = document.getElementById('revenueChart').getContext('2d');
             new Chart(revCtx, {
                 type: 'line',
                 data: {
                     labels: Object.keys(revenueTrendData).map(date => dayjs(date).format('DD MMM')),
-                    datasets: [{ label: 'Pendapatan', data: Object.values(revenueTrendData), borderColor: '#2dd4bf', borderWidth: 3, tension: 0.4 }]
+                    datasets: [{ label: 'Pendapatan', data: Object.values(revenueTrendData), borderColor: '#2dd4bf', borderWidth: 3, tension: 0.4, fill: true, backgroundColor: 'rgba(45, 212, 191, 0.1)' }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
             });
 
+            // Chart Layanan Terlaris
             const servCtx = document.getElementById('servicesChart').getContext('2d');
             new Chart(servCtx, {
                 type: 'doughnut',
@@ -287,19 +309,17 @@
         };
         
         // === LOGIKA FILTER ===
-        const cabangFilter = document.getElementById('cabangFilter');
-        const dateFilter = document.getElementById('dateFilter');
-        cabangFilter.addEventListener('change', () => document.getElementById('filterForm').submit());
-        dateFilter.addEventListener('change', () => document.getElementById('filterForm').submit());
+        const filterForm = document.getElementById('filterForm');
+        document.getElementById('cabangFilter').addEventListener('change', () => filterForm.submit());
+        document.getElementById('dateFilter').addEventListener('change', () => filterForm.submit());
 
-        // === LOGIKA MODAL DETAIL TRANSAKSI (FINAL) ===
+        // === LOGIKA MODAL DETAIL TRANSAKSI ===
         const mainContent = document.querySelector('main'); 
         const detailModal = document.getElementById('detailModal');
         const modalContent = document.getElementById('modalContent');
         const closeModalBtn = document.getElementById('closeModalBtn');
 
-        const openDetailModal = (transactionData) => {
-            const trx = transactionData;
+        const openDetailModal = (trx) => {
             if (!trx) { console.error('Data transaksi tidak valid.'); return; }
             
             document.getElementById('modalOrderId').textContent = `TRX-${dayjs(trx.created_at).format('YYYYMM')}-${String(trx.id).padStart(4, '0')}`;
@@ -323,10 +343,9 @@
                 return `<span class="${sClass} px-3 py-1 rounded-full text-xs font-semibold">${status || 'N/A'}</span>`;
             };
 
-            // PERBAIKAN LOGIKA TANGGAL SELESAI DI SINI
             const tglSelesai = trx.waktu_pembayaran && dayjs(trx.waktu_pembayaran).isValid() 
-                                ? dayjs(trx.waktu_pembayaran).format('DD MMMM YYYY') 
-                                : (trx.status == 'Selesai' && trx.updated_at ? dayjs(trx.updated_at).format('DD MMMM YYYY') : '-');
+                               ? dayjs(trx.waktu_pembayaran).format('DD MMMM YYYY') 
+                               : (trx.status == 'Selesai' && trx.updated_at ? dayjs(trx.updated_at).format('DD MMMM YYYY') : '-');
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="space-y-1"><p><strong>Nama Pelanggan:</strong> ${trx.pelanggan?.nama || 'N/A'}</p><p><strong>No. Telepon:</strong> ${trx.pelanggan?.no_handphone || 'N/A'}</p><p><strong>Asal Cabang:</strong> ${trx.cabang?.nama_cabang || 'N/A'}</p></div><hr class="my-3"/>
@@ -337,7 +356,6 @@
             detailModal.classList.remove('hidden');
             setTimeout(() => { modalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
         };
-
         const closeDetailModal = () => {
             modalContent.classList.add('scale-95', 'opacity-0');
             setTimeout(() => { detailModal.classList.add('hidden'); }, 200);
@@ -354,10 +372,6 @@
         detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetailModal(); });
         
         // === LOGIKA CRUD CABANG ===
-        const btnTambah = document.getElementById('btnTambahCabang');
-        const btnDetail = document.getElementById('btnDetailCabang');
-        const btnEdit = document.getElementById('btnEditCabang');
-
         const setupModal = (modal, openTrigger, closeSelectors) => {
             const open = () => modal.classList.remove('hidden');
             const close = () => modal.classList.add('hidden');
@@ -365,16 +379,16 @@
             modal.querySelectorAll(closeSelectors).forEach(el => el.addEventListener('click', close));
             modal.addEventListener('click', e => { if(e.target === modal) close(); });
         };
-        setupModal(document.getElementById('modalTambahCabang'), btnTambah, '.btn-batal');
-        setupModal(document.getElementById('modalDetailCabang'), btnDetail, '.btn-batal');
-        setupModal(document.getElementById('modalEditCabang'), btnEdit, '.btn-batal');
+        setupModal(document.getElementById('modalTambahCabang'), document.getElementById('btnTambahCabang'), '.btn-batal');
+        setupModal(document.getElementById('modalDetailCabang'), document.getElementById('btnDetailCabang'), '.btn-batal');
+        setupModal(document.getElementById('modalEditCabang'), document.getElementById('btnEditCabang'), '.btn-batal');
 
         const toggleCrudButtons = () => {
-            const isCabangSelected = cabangFilter.value !== 'semua';
-            btnDetail.disabled = !isCabangSelected;
-            btnEdit.disabled = !isCabangSelected;
+            const isCabangSelected = document.getElementById('cabangFilter').value !== 'semua';
+            document.getElementById('btnDetailCabang').disabled = !isCabangSelected;
+            document.getElementById('btnEditCabang').disabled = !isCabangSelected;
         };
-        cabangFilter.addEventListener('change', toggleCrudButtons);
+        document.getElementById('cabangFilter').addEventListener('change', toggleCrudButtons);
         toggleCrudButtons();
 
         const fetchCabangData = async (id) => {
@@ -388,8 +402,8 @@
             }
         };
 
-        btnDetail.addEventListener('click', async () => {
-            const id = cabangFilter.value;
+        document.getElementById('btnDetailCabang').addEventListener('click', async () => {
+            const id = document.getElementById('cabangFilter').value;
             if (id === 'semua') return;
             const data = await fetchCabangData(id);
             if(data){
@@ -399,8 +413,8 @@
             }
         });
 
-        btnEdit.addEventListener('click', async () => {
-            const id = cabangFilter.value;
+        document.getElementById('btnEditCabang').addEventListener('click', async () => {
+            const id = document.getElementById('cabangFilter').value;
             if (id === 'semua') return;
             const data = await fetchCabangData(id);
             if(data){
@@ -413,8 +427,8 @@
 
         document.getElementById('btnHapusCabang').addEventListener('click', () => {
             Swal.fire({
-                title: 'Anda yakin?', text: "Data cabang akan dihapus!", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus!'
+                title: 'Anda yakin?', text: "Data cabang ini akan dihapus secara permanen!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: 'Batal', confirmButtonText: 'Ya, Hapus!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('formHapusCabang').submit();
@@ -422,17 +436,7 @@
             });
         });
 
-        // --- UI Scripts ---
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const menuBtn = document.getElementById('menu-btn');
-        const toggleSidebar = () => {
-            sidebar.classList.toggle('sidebar-mobile-open');
-            overlay.classList.toggle('hidden');
-        };
-        menuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-
+        // --- Profile & Logout Scripts ---
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
         profileDropdownBtn.addEventListener('click', () => profileDropdownMenu.classList.toggle('hidden'));
@@ -444,11 +448,12 @@
         
         document.getElementById('logoutBtn').addEventListener('click', () => {
              Swal.fire({
-                title: 'Konfirmasi Logout', text: "Anda yakin ingin keluar?", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Logout!'
+                title: 'Konfirmasi Logout', text: "Anda yakin ingin keluar dari sesi ini?", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonText: 'Batal', confirmButtonText: 'Ya, Logout!'
             }).then((result) => { if (result.isConfirmed) document.getElementById('logout-form').submit(); });
         });
 
+        // --- Alert Auto-hide ---
         const successAlert = document.getElementById('success-alert');
         if(successAlert) setTimeout(() => { successAlert.style.display = 'none'; }, 5000);
 

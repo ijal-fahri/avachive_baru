@@ -12,15 +12,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
       body { font-family: 'Poppins', sans-serif; }
-      .sidebar-mobile-open { transform: translateX(0) !important; }
     </style>
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 flex flex-col">
+        <aside class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
             <div>
                 <div class="flex flex-col items-center text-center mb-10">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
@@ -50,8 +49,7 @@
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                 <div class="flex items-center gap-4">
-                  <button id="menu-btn" class="text-slate-800 text-2xl md:hidden"><i class="bi bi-list"></i></button>
-                  <h1 class="text-xl font-semibold text-slate-800">Dashboard Owner</h1>
+                    <h1 class="text-xl font-semibold text-slate-800">Dashboard Owner</h1>
                 </div>
                 <div class="relative">
                     <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all">
@@ -69,7 +67,7 @@
                 </div>
             </header>
 
-            <main class="px-4 md:px-6 pb-6 mt-8">
+            <main class="px-4 md:px-6 pb-28 md:pb-6 mt-8">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-xl shadow-md relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                         <p class="text-sm text-slate-500">Total Pendapatan</p>
@@ -172,7 +170,30 @@
             </main>
         </div>
     </div>
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden"></div>
+    
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+        <a href="{{ route('owner.dashboard') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
+            <i class="bi bi-grid-1x2-fill text-2xl"></i>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-receipt-cutoff text-2xl"></i>
+            <span class="text-xs">Order</span>
+        </a>
+        <a href="{{ route('owner.laporan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-shop-window text-2xl"></i>
+            <span class="text-xs">Cabang</span>
+        </a>
+        <a href="{{ route('owner.dataadmin.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-person-badge-fill text-2xl"></i>
+            <span class="text-xs">Admin</span>
+        </a>
+        <a href="{{ route('owner.datakaryawan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
+            <i class="bi bi-people-fill text-2xl"></i>
+            <span class="text-xs">Karyawan</span>
+        </a>
+    </nav>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -204,27 +225,19 @@
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false, 
-                scales: { y: { beginAtZero: true } }, 
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, 
                 plugins: { legend: { display: false } } 
             } 
         });
 
-        // --- UI Scripts ---
-        const menuBtn = document.getElementById('menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const toggleSidebar = () => {
-            sidebar.classList.toggle('sidebar-mobile-open');
-            overlay.classList.toggle('hidden');
-        };
-        menuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-
+        // --- Profile Dropdown Script ---
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
+        
         profileDropdownBtn.addEventListener('click', () => {
             profileDropdownMenu.classList.toggle('hidden');
         });
+
         window.addEventListener('click', (e) => {
             if (!profileDropdownBtn.contains(e.target) && !profileDropdownMenu.contains(e.target)) {
                 profileDropdownMenu.classList.add('hidden');

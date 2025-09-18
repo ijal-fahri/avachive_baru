@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Data Layanan - Admin Laundry</title>
+    <title>Data Layanan - Avachive Admin</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
         /* FONT & SCROLLBAR DASAR */
         body { font-family: 'Poppins', sans-serif; }
@@ -24,7 +24,6 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #14b8a6; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #0d9488; }
-        .sidebar-mobile-open { transform: translateX(0) !important; }
 
         /* STYLING TERPUSAT UNTUK INPUT & SELECT */
         .form-input, 
@@ -48,8 +47,8 @@
 
         /* STYLING TABEL UTAMA */
         #layananTable { border-collapse: collapse; }
-        #layananTable thead th { font-weight: 600; text-align: left; padding: 1rem 1.25rem; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
-        #layananTable tbody td { padding: 1rem 1.25rem; color: #334155; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        #layananTable thead th { font-weight: 600; text-align: left; padding: 1rem 1.25rem; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        #layananTable tbody td { padding: 1rem 1.25rem; color: #334155; vertical-align: middle; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
         #layananTable tbody tr:last-child td { border-bottom: none; }
         #layananTable tbody tr:hover { background-color: #f8fafc; }
         
@@ -60,9 +59,9 @@
 </head>
 
 <body class="bg-slate-100 text-slate-800 antialiased">
-    <div class="relative flex h-screen overflow-hidden bg-slate-100">
+    <div class="relative flex h-screen bg-slate-100">
         
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-30 transition-transform duration-300 ease-in-out">
+        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out hidden md:flex">
             <div class="mb-8 text-center">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-2">
                 <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
@@ -74,72 +73,90 @@
                 <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-printer text-lg"></i><span>Laporan</span></a>
             </nav>
         </aside>
-        
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 md:hidden hidden"></div>
 
-        <main class="flex-1 overflow-y-auto">
-            <div class="p-4 sm:p-6">
-                <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700"><i class="bi bi-list"></i></button>
-                        <h1 class="text-lg font-semibold text-slate-800">Daftar Layanan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
-                    </div>
-                    <div class="relative">
-                        <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
-                            <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                            <i class="bi bi-person-circle text-2xl text-slate-600"></i>
-                        </button>
-                        <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
-                            <a href="pengaturan" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"><i class="bi bi-person-circle"></i><span>Profile</span></a>
-                            <div class="border-t border-slate-200 my-1"></div>
-                            <form method="POST" action="{{ route('logout') }}" id="logout-form">
-                                @csrf
-                                <button type="button" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
-                            </form>
+        <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
+            <main class="flex-1 overflow-y-auto">
+                <div class="p-4 sm:p-6 pb-28 md:pb-6">
+                    <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <h1 class="text-lg font-semibold text-slate-800">Daftar Layanan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
+                                <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
+                                <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                            </button>
+                            <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
+                                <a href="pengaturan" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"><i class="bi bi-person-circle"></i><span>Profile</span></a>
+                                <div class="border-t border-slate-200 my-1"></div>
+                                <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                                    @csrf
+                                    <button type="button" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-                </header>
 
-                <section class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-                        <div>
-                            <h3 class="text-xl sm:text-2xl font-bold text-slate-800">🧺 Daftar Layanan</h3>
-                            <p class="text-slate-500 mt-1">Kelola semua jenis layanan laundry yang tersedia.</p>
+                    <section class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                            <div>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-800">🧺 Daftar Layanan</h3>
+                                <p class="text-slate-500 mt-1">Kelola semua jenis layanan laundry yang tersedia.</p>
+                            </div>
+                            <button id="add-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-teal-500 text-white shadow-md hover:bg-teal-600 transition-all active:scale-95">
+                                <i class="bi bi-plus-circle-fill"></i> 
+                                <span>Tambah Layanan</span>
+                            </button>
                         </div>
-                        <button id="add-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-teal-500 text-white shadow-md hover:bg-teal-600 transition-all active:scale-95">
-                            <i class="bi bi-plus-circle-fill"></i> 
-                            <span>Tambah Layanan</span>
-                        </button>
-                    </div>
-                    
-                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg mb-6">
-                        <div id="kategori-filter" class="flex items-center bg-white rounded-full p-1 text-sm self-start">
-                            <div><input type="radio" name="kategori" id="filter-all" value="" class="peer hidden" checked><label for="filter-all" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Semua</label></div>
-                            <div><input type="radio" name="kategori" id="filter-kiloan" value="Kiloan" class="peer hidden"><label for="filter-kiloan" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Kiloan</label></div>
-                            <div><input type="radio" name="kategori" id="filter-satuan" value="Satuan" class="peer hidden"><label for="filter-satuan" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Satuan</label></div>
+                        
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg mb-6">
+                            <div id="kategori-filter" class="flex items-center bg-white rounded-full p-1 text-sm self-start overflow-x-auto">
+                                <div><input type="radio" name="kategori" id="filter-all" value="" class="peer hidden" checked><label for="filter-all" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Semua</label></div>
+                                <div><input type="radio" name="kategori" id="filter-kiloan" value="Kiloan" class="peer hidden"><label for="filter-kiloan" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Kiloan</label></div>
+                                <div><input type="radio" name="kategori" id="filter-satuan" value="Satuan" class="peer hidden"><label for="filter-satuan" class="cursor-pointer px-4 py-1.5 rounded-full peer-checked:bg-teal-500 peer-checked:text-white peer-checked:shadow-md transition-colors duration-200">Satuan</label></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table id="layananTable" class="w-full text-sm">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Layanan</th>
-                                    <th>Paket</th>
-                                    <th>Harga</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        
+                        <div class="overflow-x-auto">
+                            <table id="layananTable" class="w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Layanan</th>
+                                        <th>Paket</th>
+                                        <th>Harga</th>
+                                        <th>Diskon</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
-        </main>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
     </div>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+            <i class="bi bi-speedometer2 text-2xl"></i>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="{{ route('produk.index') }}" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
+            <i class="bi bi-list-check text-2xl"></i>
+            <span class="text-xs">Layanan</span>
+        </a>
+        <a href="{{ route('datauser') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+            <i class="bi bi-people text-2xl"></i>
+            <span class="text-xs">Karyawan</span>
+        </a>
+        <a href="{{ route('dataorder') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+            <i class="bi bi-printer text-2xl"></i>
+            <span class="text-xs">Laporan</span>
+        </a>
+    </nav>
 
     <div id="formModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-center p-4">
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg relative animate-modal-in">
@@ -167,9 +184,16 @@
                             <option value="Satuan">Satuan</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="harga" class="block mb-1 text-sm font-medium text-slate-700">Harga</label>
-                        <input type="number" name="harga" id="harga" required class="form-input">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="harga" class="block mb-1 text-sm font-medium text-slate-700">Harga</label>
+                            <input type="number" name="harga" id="harga" required class="form-input">
+                        </div>
+                        {{-- Fitur Diskon (Dummy) --}}
+                        <div class="opacity-50">
+                            <label for="diskon" class="block mb-1 text-sm font-medium text-slate-700">Diskon (%)</label>
+                            <input type="number" name="diskon" id="diskon" placeholder="Fitur belum ada" class="form-input bg-slate-100 cursor-not-allowed" readonly>
+                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end gap-4 mt-8">
@@ -213,12 +237,21 @@
 
     <script>
     $(document).ready(function() {
+        // --- Helper Function ---
+        const formatCurrency = (val) => {
+            const number = Number(val);
+            if (isNaN(number)) {
+                return 'Rp 0';
+            }
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        };
+
         // --- DataTable Initialization ---
         let table = $('#layananTable').DataTable({
             dom: '<"dt-controls-row"<"dt-length"l><"dt-search"f>>t<"dt-bottom-row"<"dt-info"i><"dt-paging"p>>',
             processing: true,
             serverSide: true,
-            responsive: true,
+            responsive: false,
             ajax: {
                 url: "{{ route('layanan.data') }}",
                 type: 'POST',
@@ -231,7 +264,23 @@
                 { data: 'no', name: 'no', orderable: false, searchable: false },
                 { data: 'nama', name: 'nama', className: 'font-semibold' },
                 { data: 'paket', name: 'paket' },
-                { data: 'harga', name: 'harga' },
+                { 
+                    data: 'harga', 
+                    name: 'harga',
+                    render: function(data, type, row) {
+                        return `<span class="font-semibold">${formatCurrency(data)}</span>`;
+                    }
+                },
+                // Kolom Diskon Dummy
+                {
+                    data: null,
+                    name: 'diskon',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return '<span class="text-slate-400">-</span>';
+                    }
+                },
                 { 
                     data: 'json',
                     name: 'action',
@@ -317,19 +366,11 @@
              }).then((result) => { if (result.isConfirmed) form.submit(); });
         });
 
-        // --- UI Logic (Sidebar, User Menu) ---
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        // --- UI Logic (User Menu & Logout) ---
         const userMenuButton = document.getElementById('user-menu-button');
         const userMenu = document.getElementById('user-menu');
         const logoutButton = document.getElementById('logout-button');
-        const toggleSidebar = () => {
-            sidebar.classList.toggle('-translate-x-full');
-            sidebarOverlay.classList.toggle('hidden');
-        };
-        hamburgerBtn.addEventListener('click', toggleSidebar);
-        sidebarOverlay.addEventListener('click', toggleSidebar);
+
         userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); userMenu.classList.toggle('hidden'); });
         window.addEventListener('click', (e) => {
             if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {

@@ -54,6 +54,9 @@ class AuthenticatedSessionController extends Controller
         if ($user->usertype === 'driver') {
             return redirect()->intended('/driver/dashboard');
         }
+        if ($user->usertype === 'pelanggan') {
+            return redirect()->intended('/pelanggan/home');
+        }
 
         // Fallback jika tidak ada role yang cocok
         return redirect()->intended(RouteServiceProvider::HOME);

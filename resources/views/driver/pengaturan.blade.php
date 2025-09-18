@@ -40,7 +40,10 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-        .modal-content { transition: all 0.3s ease-in-out; }
+
+        .modal-content {
+            transition: all 0.3s ease-in-out;
+        }
     </style>
 </head>
 
@@ -77,10 +80,19 @@
                     </div>
                 </div>
                 <div class="relative">
+                    {{-- ...existing code... --}}
                     <button id="profileDropdownBtn"
                         class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:ring-2 hover:ring-blue-400 transition-all">
-                        <i class="bi bi-person-fill text-xl"></i>
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                                alt="Foto Profil"
+                                class="w-10 h-10 rounded-full object-cover border-2 border-blue-400 shadow">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=64&bold=true"
+                                alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-400 shadow">
+                        @endif
                     </button>
+                    {{-- ...existing code... --}}
                     <div id="profileDropdownMenu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-20 border border-slate-200">
                         <div class="p-2">
@@ -100,12 +112,21 @@
                     Profil Driver
                 </h3>
                 <div class="flex flex-col items-center text-center md:flex-row md:text-left gap-6">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=128&bold=true"
-                        alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md">
+                    @if ($user->profile_photo)
+                        <img id="profilePhoto" src="{{ asset('uploads/profile_photos/' . $user->profile_photo) }}"
+                            alt="Foto Profil"
+                            class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover cursor-pointer">
+                    @else
+                        <img id="profilePhoto"
+                            src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3498db&color=fff&size=128&bold=true"
+                            alt="Foto Profil"
+                            class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md cursor-pointer">
+                    @endif
                     <div class="profile-info">
-                        <h4 class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</h4>
-                        <p class="text-slate-500 mt-1">Role: {{ Auth::user()->usertype }}</p>
-                        <button id="openProfileModalBtn" class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                        <h4 class="text-2xl font-bold text-slate-900">{{ $user->name }}</h4>
+                        <p class="text-slate-500 mt-1">Role: {{ $user->usertype }}</p>
+                        <button id="openProfileModalBtn"
+                            class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                             <i class="bi bi-pencil-square mr-2"></i>Edit Profil
                         </button>
                     </div>
@@ -149,64 +170,95 @@
                 © 2025 Avachive Driver. All rights reserved.
             </footer>
         </main>
-        
+
         {{-- Navigasi mobile disesuaikan agar konsisten --}}
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-            <a href="/driver/dashboard" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+        <nav
+            class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+            <a href="/driver/dashboard"
+                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
                 <i class="bi bi-box-seam text-2xl"></i>
                 <span class="text-xs">Pengiriman</span>
             </a>
-            <a href="/driver/riwayat" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+            <a href="/driver/riwayat"
+                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
                 <i class="bi bi-clock-history text-2xl"></i>
                 <span class="text-xs">Riwayat</span>
             </a>
         </nav>
     </div>
 
-    {{-- MODAL EDIT PROFIL (DUMMY) --}}
-    <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex justify-center items-center p-4">
-        <div id="profileModalContent" class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative transform scale-95 opacity-0">
+    {{-- MODAL EDIT PROFIL --}}
+    <div id="profileModal"
+        class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex justify-center items-center p-4">
+        <div id="profileModalContent"
+            class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative transform scale-95 opacity-0">
             <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
-                <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800"><i class="bi bi-pencil-square text-teal-500"></i>Edit Profil (Dummy)</h3>
-                <button id="closeProfileModalBtn" class="text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
+                <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800"><i
+                        class="bi bi-pencil-square text-teal-500"></i>Edit Profil</h3>
+                <button id="closeProfileModalBtn"
+                    class="text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
             </div>
-            <form id="editProfileFormDummy" action="#!" method="POST" class="space-y-4 pt-2">
+            <form id="editProfileForm" action="{{ route('driver.pengaturan.update', $user->id) }}" method="POST"
+                enctype="multipart/form-data" class="space-y-4 pt-2">
                 @csrf
-                {{-- Fitur Foto Profil (Dummy/Non-aktif) --}}
+                @method('PUT')
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">Foto Profil</label>
-                    <div class="flex items-center gap-4 opacity-50">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=128&bold=true" alt="Foto Profil" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
-                        <div>
-                            <span class="cursor-not-allowed bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm">Pilih Foto</span>
-                            <p class="text-xs text-slate-500 mt-2">Fitur ini belum tersedia.</p>
-                        </div>
+                    <div class="flex items-center gap-4">
+                        @if ($user->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . $user->profile_photo) }}" alt="Foto Profil"
+                                class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3498db&color=fff&size=128&bold=true"
+                                alt="Foto Profil"
+                                class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                        @endif
+                        <input type="file" name="profile_photo" accept="image/*" class="block mt-2 text-sm">
                     </div>
                 </div>
-                {{-- Fitur Username (Dummy/Non-aktif) --}}
                 <div>
-                    <label for="name_dummy" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                    <input type="text" id="name_dummy" value="{{ Auth::user()->name }}" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                    <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <input type="text" id="name" name="name" value="{{ $user->name }}"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md" required>
                 </div>
-                
                 <hr class="border-slate-200 !my-6">
-                
-                {{-- Fitur Ubah Password (Dummy/Non-aktif) --}}
-                <h4 class="text-base font-semibold text-slate-800 -mb-2 opacity-50">Ubah Password</h4>
+                <h4 class="text-base font-semibold text-slate-800 -mb-2">Ubah Password</h4>
                 <div>
-                    <label for="password_dummy" class="block text-sm font-medium text-slate-700 mb-1 opacity-50">Password Baru</label>
-                    <input type="password" id="password_dummy" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password Baru</label>
+                    <input type="password" id="password" name="password"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md">
                 </div>
                 <div>
-                    <label for="password_confirmation_dummy" class="block text-sm font-medium text-slate-700 mb-1 opacity-50">Konfirmasi Password Baru</label>
-                    <input type="password" id="password_confirmation_dummy" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                    <label for="password_confirmation"
+                        class="block text-sm font-medium text-slate-700 mb-1">Konfirmasi Password Baru</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md">
                 </div>
-
                 <div class="flex justify-end pt-4">
-                    <button type="button" id="cancelProfileChangeBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg mr-3">Tutup</button>
-                    <button type="submit" class="bg-teal-500 text-white font-bold py-2 px-6 rounded-lg shadow-md opacity-50 cursor-not-allowed">Simpan Perubahan</button>
+                    <button type="button" id="cancelProfileChangeBtn"
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg mr-3">Tutup</button>
+                    <button type="submit"
+                        class="bg-teal-500 text-white font-bold py-2 px-6 rounded-lg shadow-md">Simpan
+                        Perubahan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Preview Foto Profil -->
+    <div id="photoPreviewModal"
+        class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 relative max-w-xs w-full flex flex-col items-center">
+            <button id="closePhotoPreviewBtn"
+                class="absolute top-2 right-3 text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            @if ($user->profile_photo)
+                <img src="{{ asset('uploads/profile_photos/' . $user->profile_photo) }}" alt="Foto Profil"
+                    class="w-48 h-48 rounded-full object-cover border-4 border-teal-400 shadow-md">
+            @else
+                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3498db&color=fff&size=256&bold=true"
+                    alt="Foto Profil" class="w-48 h-48 rounded-full border-4 border-teal-400 shadow-md">
+            @endif
+            <div class="mt-4 text-center text-lg font-semibold text-slate-800">{{ $user->name }}</div>
         </div>
     </div>
 
@@ -286,7 +338,42 @@
                     confirmButtonColor: '#14b8a6'
                 });
             });
+
+            // ====== PHOTO PREVIEW MODAL LOGIC ======
+            const photoPreviewModal = el('#photoPreviewModal');
+            const closePhotoPreviewBtn = el('#closePhotoPreviewBtn');
+
+            // Function to open the photo preview modal
+            window.openPhotoPreview = () => {
+                photoPreviewModal.classList.remove('hidden');
+            };
+
+            // Function to close the photo preview modal
+            const closePhotoPreviewModal = () => {
+                photoPreviewModal.classList.add('hidden');
+            };
+
+            closePhotoPreviewBtn.addEventListener('click', closePhotoPreviewModal);
+            photoPreviewModal.addEventListener('click', (e) => {
+                if (e.target === photoPreviewModal) closePhotoPreviewModal();
+            });
         });
+
+        // ...existing code...
+        const profilePhoto = document.getElementById('profilePhoto');
+        const photoPreviewModal = document.getElementById('photoPreviewModal');
+        const closePhotoPreviewBtn = document.getElementById('closePhotoPreviewBtn');
+
+        profilePhoto.addEventListener('click', () => {
+            photoPreviewModal.classList.remove('hidden');
+        });
+        closePhotoPreviewBtn.addEventListener('click', () => {
+            photoPreviewModal.classList.add('hidden');
+        });
+        photoPreviewModal.addEventListener('click', (e) => {
+            if (e.target === photoPreviewModal) photoPreviewModal.classList.add('hidden');
+        });
+        // ...existing code...
     </script>
 
 </body>

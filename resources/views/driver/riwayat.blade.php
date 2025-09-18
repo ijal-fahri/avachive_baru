@@ -92,10 +92,19 @@
                     </div>
                 </div>
                 <div class="relative">
+                    {{-- ...existing code... --}}
                     <button id="profileDropdownBtn"
                         class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:ring-2 hover:ring-blue-400 transition-all">
-                        <i class="bi bi-person-fill text-xl"></i>
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                                alt="Foto Profil"
+                                class="w-10 h-10 rounded-full object-cover border-2 border-blue-400 shadow">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=64&bold=true"
+                                alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-400 shadow">
+                        @endif
                     </button>
+                    {{-- ...existing code... --}}
                     <div id="profileDropdownMenu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-20 border border-slate-200">
                         <div class="p-2">
@@ -263,8 +272,10 @@
         </main>
 
         {{-- PENYESUAIAN: Navigasi Mobile diubah agar konsisten --}}
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-            <a href="/driver/dashboard" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+        <nav
+            class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+            <a href="/driver/dashboard"
+                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
                 <i class="bi bi-box-seam text-2xl"></i>
                 <span class="text-xs">Pengiriman</span>
             </a>
