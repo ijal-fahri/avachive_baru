@@ -22,6 +22,7 @@ class User extends Authenticatable
         'usertype', 
         'plain_password', // Pastikan kolom ini ada di database Anda
         'cabang_id',
+        'profile_photo',
     ];
 
     /**

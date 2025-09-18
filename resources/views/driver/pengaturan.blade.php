@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\Auth; @endphp
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
 
@@ -11,9 +12,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
         /* Custom styles untuk Poppins font & scrollbar */
         body {
@@ -37,6 +40,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+        .modal-content { transition: all 0.3s ease-in-out; }
     </style>
 </head>
 
@@ -101,6 +105,9 @@
                     <div class="profile-info">
                         <h4 class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</h4>
                         <p class="text-slate-500 mt-1">Role: {{ Auth::user()->usertype }}</p>
+                        <button id="openProfileModalBtn" class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                            <i class="bi bi-pencil-square mr-2"></i>Edit Profil
+                        </button>
                     </div>
                 </div>
             </section>
@@ -142,19 +149,65 @@
                 © 2025 Avachive Driver. All rights reserved.
             </footer>
         </main>
-
-        <nav
-            class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 text-slate-300 p-2 flex justify-around shadow-lg">
-            <a href="/driver/dashboard"
-                class="flex flex-col items-center justify-center hover:text-white p-2 rounded-lg w-full">
-                <i class="bi bi-box-seam text-xl"></i><span class="text-xs">Pengiriman</span>
+        
+        {{-- Navigasi mobile disesuaikan agar konsisten --}}
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+            <a href="/driver/dashboard" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+                <i class="bi bi-box-seam text-2xl"></i>
+                <span class="text-xs">Pengiriman</span>
             </a>
-            <a href="/driver/riwayat"
-                class="flex flex-col items-center justify-center hover:text-white p-2 rounded-lg w-full">
-                <i class="bi bi-clock-history text-xl"></i><span class="text-xs">Riwayat</span>
+            <a href="/driver/riwayat" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+                <i class="bi bi-clock-history text-2xl"></i>
+                <span class="text-xs">Riwayat</span>
             </a>
         </nav>
+    </div>
 
+    {{-- MODAL EDIT PROFIL (DUMMY) --}}
+    <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex justify-center items-center p-4">
+        <div id="profileModalContent" class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative transform scale-95 opacity-0">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800"><i class="bi bi-pencil-square text-teal-500"></i>Edit Profil (Dummy)</h3>
+                <button id="closeProfileModalBtn" class="text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            </div>
+            <form id="editProfileFormDummy" action="#!" method="POST" class="space-y-4 pt-2">
+                @csrf
+                {{-- Fitur Foto Profil (Dummy/Non-aktif) --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Foto Profil</label>
+                    <div class="flex items-center gap-4 opacity-50">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=128&bold=true" alt="Foto Profil" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                        <div>
+                            <span class="cursor-not-allowed bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm">Pilih Foto</span>
+                            <p class="text-xs text-slate-500 mt-2">Fitur ini belum tersedia.</p>
+                        </div>
+                    </div>
+                </div>
+                {{-- Fitur Username (Dummy/Non-aktif) --}}
+                <div>
+                    <label for="name_dummy" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <input type="text" id="name_dummy" value="{{ Auth::user()->name }}" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                </div>
+                
+                <hr class="border-slate-200 !my-6">
+                
+                {{-- Fitur Ubah Password (Dummy/Non-aktif) --}}
+                <h4 class="text-base font-semibold text-slate-800 -mb-2 opacity-50">Ubah Password</h4>
+                <div>
+                    <label for="password_dummy" class="block text-sm font-medium text-slate-700 mb-1 opacity-50">Password Baru</label>
+                    <input type="password" id="password_dummy" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                </div>
+                <div>
+                    <label for="password_confirmation_dummy" class="block text-sm font-medium text-slate-700 mb-1 opacity-50">Konfirmasi Password Baru</label>
+                    <input type="password" id="password_confirmation_dummy" class="block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed" readonly>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="button" id="cancelProfileChangeBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg mr-3">Tutup</button>
+                    <button type="submit" class="bg-teal-500 text-white font-bold py-2 px-6 rounded-lg shadow-md opacity-50 cursor-not-allowed">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -162,48 +215,78 @@
     </form>
 
     <script>
-        // ==========================================================
-        // JAVASCRIPT LOGIC
-        // ==========================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const el = sel => document.querySelector(sel);
 
-        const el = sel => document.querySelector(sel);
+            // ====== PROFILE DROPDOWN & LOGOUT LOGIC ======
+            const profileDropdownBtn = el('#profileDropdownBtn');
+            const profileDropdownMenu = el('#profileDropdownMenu');
+            const logoutBtn = el('#logoutBtn');
 
-        // ====== PROFILE DROPDOWN & LOGOUT LOGIC ======
-        const profileDropdownBtn = el('#profileDropdownBtn');
-        const profileDropdownMenu = el('#profileDropdownMenu');
-        const logoutBtn = el('#logoutBtn');
-
-        if (profileDropdownBtn) {
-            profileDropdownBtn.addEventListener('click', () => {
-                profileDropdownMenu.classList.toggle('hidden');
-            });
-
-            window.addEventListener('click', (e) => {
-                if (!profileDropdownBtn.contains(e.target) && !profileDropdownMenu.contains(e.target)) {
-                    profileDropdownMenu.classList.add('hidden');
-                }
-            });
-
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                profileDropdownMenu.classList.add('hidden');
-                Swal.fire({
-                    title: 'Anda yakin ingin keluar?',
-                    text: "Anda akan dikembalikan ke halaman login.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Logout!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // INI BAGIAN PENTING: Mengirimkan form logout yang tersembunyi
-                        document.getElementById('logout-form').submit();
+            if (profileDropdownBtn) {
+                profileDropdownBtn.addEventListener('click', () => {
+                    profileDropdownMenu.classList.toggle('hidden');
+                });
+                window.addEventListener('click', (e) => {
+                    if (!profileDropdownBtn.contains(e.target) && !profileDropdownMenu.contains(e.target)) {
+                        profileDropdownMenu.classList.add('hidden');
                     }
                 });
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    profileDropdownMenu.classList.add('hidden');
+                    Swal.fire({
+                        title: 'Anda yakin ingin keluar?',
+                        text: "Anda akan dikembalikan ke halaman login.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Logout!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById('logout-form').submit();
+                        }
+                    });
+                });
+            }
+
+            // ====== DUMMY EDIT PROFILE MODAL LOGIC ======
+            const profileModal = el('#profileModal');
+            const profileModalContent = el('#profileModalContent');
+            const openProfileModalBtn = el('#openProfileModalBtn');
+            const closeProfileModalBtn = el('#closeProfileModalBtn');
+            const cancelProfileChangeBtn = el('#cancelProfileChangeBtn');
+            const editProfileFormDummy = el('#editProfileFormDummy');
+
+            const openModal = () => {
+                profileModal.classList.remove('hidden');
+                setTimeout(() => profileModalContent.classList.remove('scale-95', 'opacity-0'), 10);
+            };
+            const closeModal = () => {
+                profileModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => profileModal.classList.add('hidden'), 300);
+            };
+
+            openProfileModalBtn.addEventListener('click', openModal);
+            closeProfileModalBtn.addEventListener('click', closeModal);
+            cancelProfileChangeBtn.addEventListener('click', closeModal);
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) closeModal();
             });
-        }
+
+            // Handle dummy form submission
+            editProfileFormDummy.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Fitur Belum Tersedia',
+                    text: 'Fungsi untuk mengubah profil masih dalam tahap pengembangan.',
+                    confirmButtonColor: '#14b8a6'
+                });
+            });
+        });
     </script>
 
 </body>

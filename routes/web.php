@@ -97,8 +97,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [KasirController::class, 'index'])->name('kasir.dashboard');
         Route::resource('/pelanggan', KasirPelangganController::class);
         Route::resource('/buat_order', KasirBuatOrderController::class);
-        // Route::resource('/kasir/data_order', KasirDataOrderController::class);
-        Route::resource('/pengaturan', KasirSettingsController::class);
+        Route::get('/pengaturan', [KasirSettingsController::class, 'index'])->name('kasir.pengaturan.index');
+        Route::put('/pengaturan/{id}', [KasirSettingsController::class, 'update'])->name('kasir.pengaturan.update');
         Route::get('/data_order', [KasirDataOrderController::class, 'index'])->middleware('auth','kasir')->name('kasir.dataorder.index');
         Route::patch('/data_order/{order}/status', [KasirDataOrderController::class, 'updateStatus'])->middleware('auth','kasir')->name('kasir.dataorder.update_status');
         Route::get('/riwayat_order', [KasirRiwayatOrderController::class, 'index'])->name('kasir.riwayatorder.index');

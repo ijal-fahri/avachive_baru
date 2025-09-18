@@ -113,27 +113,38 @@
     @include('components.sidebar_kasir')
 
     <div class="ml-0 lg:ml-64 min-h-screen p-6">
-        <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 justify-between items-center hidden md:flex">
+        <div
+            class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 justify-between items-center hidden md:flex">
             <div class="flex items-center gap-4">
                 <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="text-lg font-semibold text-slate-800">Buat Order Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                <h1 class="text-lg font-semibold text-slate-800">Buat Order Cabang
+                    {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
             </div>
             <div class="relative">
                 <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                     <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                    <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                    @if (Auth::user()->profile_photo)
+                        <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                            alt="Foto Profil" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                    @else
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
+                            alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
+                    @endif
                 </button>
-                <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
-                    <a href="pengaturan" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                <div id="user-menu"
+                    class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
+                    <a href="pengaturan"
+                        class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
                         <i class="bi bi-person-circle"></i>
                         <span>Profile</span>
                     </a>
                     <div class="border-t border-slate-200 my-1"></div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        <button type="submit" id="logout-button"
+                            class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Logout</span>
                         </button>
@@ -205,7 +216,8 @@
                                                 <h3 class="font-bold text-lg text-gray-800">{{ $layanan->nama }}</h3>
                                                 <div class="flex gap-4 mt-1">
                                                     <p class="text-sm text-gray-600">
-                                                        Paket: <span class="text-gray-800">{{ $layanan->paket }}</span>
+                                                        Paket: <span
+                                                            class="text-gray-800">{{ $layanan->paket }}</span>
                                                     </p>
                                                 </div>
                                             </div>
@@ -301,10 +313,12 @@
                                 <!-- Tunai Section (akan muncul jika metode pembayaran Tunai dipilih) -->
                                 <div id="tunaiSection" class="tunai-section hidden">
                                     <h4 class="font-medium text-gray-700 mb-2">Pembayaran Tunai</h4>
-                                    <input type="number" id="uang_diberikan" name="uang_diberikan_input" class="uang-diberikan-input"
-                                        placeholder="Masukkan uang yang diberikan" min="0">
+                                    <input type="number" id="uang_diberikan" name="uang_diberikan_input"
+                                        class="uang-diberikan-input" placeholder="Masukkan uang yang diberikan"
+                                        min="0">
                                     <div id="kembalianDisplay" class="kembalian-amount">Kembalian: Rp 0</div>
-                                    <div id="paymentError" class="payment-error hidden">Uang yang diberikan kurang!</div>
+                                    <div id="paymentError" class="payment-error hidden">Uang yang diberikan kurang!
+                                    </div>
                                 </div>
 
                                 <div>
@@ -424,7 +438,7 @@
                 }
             });
         });
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             // Data Layanan yang dipilih
             let selectedServices = {};
@@ -463,7 +477,7 @@
             const metodePembayaranContainer = document.getElementById('metodePembayaranContainer');
 
             let activeCategory = 'Satuan'; // Default kategori
-            let activePaket = 'Semua';     // Default paket
+            let activePaket = 'Semua'; // Default paket
 
             function filterServices() {
                 const searchTerm = serviceSearchInput.value.toLowerCase();
@@ -598,7 +612,7 @@
 
                 // Update DP calculation if needed
                 updateDPCalculation();
-                
+
                 // Update tunai calculation if needed
                 updateTunaiCalculation();
             };
@@ -693,7 +707,8 @@
                     kembalianDisplay.style.color = '#059669'; // Green color
                     paymentError.classList.add('hidden');
                 } else {
-                    kembalianDisplay.textContent = `Kekurangan: Rp ${Math.abs(kembalian).toLocaleString('id-ID')}`;
+                    kembalianDisplay.textContent =
+                        `Kekurangan: Rp ${Math.abs(kembalian).toLocaleString('id-ID')}`;
                     kembalianDisplay.style.color = '#dc2626'; // Red color
                     paymentError.classList.remove('hidden');
                 }
@@ -709,7 +724,7 @@
                     // Sembunyikan metode pembayaran dan tunai section
                     metodePembayaranContainer.classList.add('hidden');
                     tunaiSection.classList.add('hidden');
-                    
+
                     // Tampilkan DP section
                     dpSection.classList.remove('hidden');
                     paymentSummary.classList.remove('hidden');
@@ -717,16 +732,16 @@
                 } else {
                     // Tampilkan metode pembayaran
                     metodePembayaranContainer.classList.remove('hidden');
-                    
+
                     // Sembunyikan DP section
                     dpSection.classList.add('hidden');
                     paymentSummary.classList.add('hidden');
-                    
+
                     // Reset DP values
                     dpInput.value = '';
                     document.getElementById('dp_amount_input').value = 0;
                     document.getElementById('remaining_amount_input').value = totalHarga;
-                    
+
                     // Tampilkan tunai section jika metode tunai dipilih
                     if (metodePembayaranSelect.value === 'Tunai') {
                         tunaiSection.classList.remove('hidden');
@@ -862,7 +877,8 @@
                     formData.append('dp_dibayar', document.getElementById('dp_input').value);
                     formData.append('remaining_amount', document.getElementById(
                         'remaining_amount_input').value);
-                    formData.append('uang_diberikan', document.getElementById('uang_diberikan_input').value);
+                    formData.append('uang_diberikan', document.getElementById('uang_diberikan_input')
+                        .value);
                     formData.append('kembalian', document.getElementById('kembalian_input').value);
                     formData.append('_token', document.querySelector('meta[name="csrf-token"]')
                         .content);
@@ -912,7 +928,8 @@
                     // Update active button style
                     document.querySelectorAll('.category-filter').forEach(btn => {
                         btn.classList.remove('bg-blue-500', 'text-white');
-                        btn.classList.add('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');
+                        btn.classList.add('border-blue-500', 'text-blue-500',
+                            'hover:bg-blue-50');
                     });
 
                     this.classList.remove('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');

@@ -5,63 +5,58 @@ namespace App\Http\Controllers\kasir;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class KasirSettingsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Tampilkan halaman pengaturan profil
      */
     public function index()
     {
-        $user = Auth::user();
+        $user = Auth::user(); // ambil user yang login
         return view('kasir.pengaturan', compact('user'));
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * Update profil user
      */
     public function update(Request $request, string $id)
-    {
-        //
+{
+    $user = User::findOrFail($id);
+
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'password' => 'nullable|string|min:6|confirmed',
+        'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
+
+    $user->name = $request->name;
+
+    // update password jika diisi
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+        $user->plain_password = $request->password;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+    // update foto profil jika ada
+    if ($request->hasFile('profile_photo')) {
+        $file = $request->file('profile_photo');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('uploads/profile_photos'), $filename);
+
+        // hapus foto lama jika ada
+        if ($user->profile_photo && file_exists(public_path('uploads/profile_photos/' . $user->profile_photo))) {
+            unlink(public_path('uploads/profile_photos/' . $user->profile_photo));
+        }
+
+        $user->profile_photo = $filename;
     }
+
+    $user->save();
+
+    return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
+}
+
 }

@@ -9,7 +9,8 @@
     <title>Pengaturan</title>
     <script src="https://kit.fontawesome.com/0948e65078.js" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-ico">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .setting-card {
             transition: all 0.2s ease;
@@ -37,6 +38,7 @@
         .modal-content {
             max-height: 80vh;
             overflow-y: auto;
+            transition: all 0.3s ease-in-out;
         }
 
         /* Fix untuk header dan sidebar */
@@ -90,13 +92,23 @@
                     <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                         <i class="bi bi-list"></i>
                     </button>
-                    <h1 class="text-lg font-semibold text-slate-800">Profile Kasir Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                    <h1 class="text-lg font-semibold text-slate-800">Profil Kasir</h1>
                 </div>
                 <div class="relative">
+                    {{-- Ganti bagian ini di header setiap halaman kasir --}}
+                    {{-- ...existing code... --}}
                     <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                         <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                        <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                                alt="Foto Profil"
+                                class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
+                                alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
+                        @endif
                     </button>
+                    {{-- ...existing code... --}}
                     <div id="user-menu"
                         class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
                         <a href="pengaturan"
@@ -118,16 +130,26 @@
             </div>
             <!-- End Header -->
 
-            <div class="pt-20 lg:pt-6 max-w-4xl mx-auto space-y-8 mt-4">
+            <div class="pb-20 pt-20 lg:pt-6 max-w-4xl mx-auto space-y-8 mt-4">
                 <section class="bg-white rounded-2xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i
                             class="bi bi-person-circle text-blue-600"></i> Profil Anda</h3>
                     <div class="flex flex-col sm:flex-row items-center gap-6">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
-                            alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md">
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                                alt="Foto Profil"
+                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover">
+                        @else
+                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
+                                alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md">
+                        @endif
                         <div class="text-center sm:text-left">
                             <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
                             <p class="text-slate-500 mt-1">Role: {{ ucfirst(Auth::user()->usertype) }}</p>
+                            <button id="openProfileModalBtn"
+                                class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                <i class="bi bi-pencil-square mr-2"></i>Edit Profil
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -145,7 +167,6 @@
                         <li>Gunakan halaman <strong class="font-semibold text-slate-700">Data Order</strong> untuk
                             melihat dan mengelola semua transaksi yang sudah dibuat.</li>
                     </ul>
-
                 </section>
 
                 <section class="bg-white rounded-2xl shadow-lg p-6">
@@ -161,6 +182,85 @@
         </div>
     </div>
     <!-- End Main Content -->
+
+    {{-- MODAL EDIT PROFIL --}}
+    <div id="profileModal"
+        class="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 hidden">
+        <div id="profileModalContent"
+            class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative transform scale-95 opacity-0">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800"><i
+                        class="bi bi-pencil-square text-teal-500"></i>Edit Profil</h3>
+                <button id="closeProfileModalBtn"
+                    class="text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
+            </div>
+
+            <form id="editProfileForm" action="{{ route('kasir.pengaturan.update', $user->id) }}" method="POST"
+                enctype="multipart/form-data" class="space-y-4 pt-2">
+                @csrf
+                @method('PUT')
+
+                {{-- Fitur Foto Profil (Dummy/Non-aktif) --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Foto Profil</label>
+                    <div class="flex items-center gap-4">
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                                alt="Foto Profil" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                        @else
+                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
+                                alt="Foto Profil" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
+                        @endif
+                        <div>
+                            <label for="profile_photo"
+                                class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm">
+                                Pilih Foto
+                            </label>
+                            <input type="file" name="profile_photo" id="profile_photo" class="hidden"
+                                accept="image/*">
+                            <p class="text-xs text-slate-500 mt-2">Format: JPG, PNG (max 2MB)</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                {{-- Username --}}
+                <div>
+                    <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <input type="text" name="name" id="name"
+                        value="{{ old('name', Auth::user()->name) }}"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400">
+                </div>
+                <hr class="border-slate-200 !my-6">
+
+                {{-- Password --}}
+                <div>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password Baru</label>
+                    <input type="password" name="password" id="password"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400">
+                </div>
+                <div>
+                    <label for="password_confirmation"
+                        class="block text-sm font-medium text-slate-700 mb-1">Konfirmasi Password Baru</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation"
+                        class="block w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <p class="text-xs text-slate-500 mt-1">Kosongkan jika tidak ingin mengubah password.</p>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="button" id="cancelProfileChangeBtn"
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg mr-3">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
 
     <div id="overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
 
@@ -231,6 +331,30 @@
                 });
             }
 
+            // --- Modal Edit Profile Logic ---
+            const profileModal = document.getElementById('profileModal');
+            const profileModalContent = document.getElementById('profileModalContent');
+            const openProfileModalBtn = document.getElementById('openProfileModalBtn');
+            const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
+            const cancelProfileChangeBtn = document.getElementById('cancelProfileChangeBtn');
+
+            const openModal = (modal, content) => {
+                modal.classList.remove('hidden');
+                setTimeout(() => content.classList.remove('scale-95', 'opacity-0'), 10);
+            };
+
+            const closeModal = (modal, content) => {
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            openProfileModalBtn.addEventListener('click', () => openModal(profileModal, profileModalContent));
+            closeProfileModalBtn.addEventListener('click', () => closeModal(profileModal, profileModalContent));
+            cancelProfileChangeBtn.addEventListener('click', () => closeModal(profileModal, profileModalContent));
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) closeModal(profileModal, profileModalContent);
+            });
+
             // Handle window resize
             window.addEventListener('resize', function() {
                 if (window.innerWidth >= 768) {
@@ -244,6 +368,33 @@
                     mainContent.style.marginLeft = '0';
                 }
             });
+
+            // SweetAlert for Laravel session success (jika ada)
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#14b8a6'
+                });
+            @endif
+
+            // SweetAlert for Validation Errors (jika ada error dari Laravel)
+            @if ($errors->any())
+                let errorMessages = `<ul class="mt-2 list-disc list-inside text-sm text-left">`;
+                @foreach ($errors->all() as $error)
+                    errorMessages += `<li>{{ $error }}</li>`;
+                @endforeach
+                errorMessages += `</ul>`;
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memperbarui Profil',
+                    html: errorMessages,
+                    confirmButtonColor: '#14b8a6'
+                });
+                openModal(profileModal, profileModalContent); // Buka kembali modal edit profil
+            @endif
         });
     </script>
 </body>

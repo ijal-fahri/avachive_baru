@@ -11,9 +11,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="icon" href="{{ asset('/images/favicon.ico') }}" type="image/x-ico">
+
     <style>
         /* Custom styles untuk Poppins font & scrollbar */
         body {
@@ -186,7 +188,6 @@
                                         $layananJson = '[]';
                                     }
 
-                                    // Gunakan updated_at untuk waktu selesai seperti di dashboard
                                     $waktuSelesai =
                                         $order->status === 'Selesai'
                                             ? $order->updated_at->toIso8601String()
@@ -261,15 +262,15 @@
             </footer>
         </main>
 
-        <nav
-            class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 text-slate-300 p-2 flex justify-around shadow-lg">
-            <a href="/driver/dashboard"
-                class="flex flex-col items-center justify-center hover:text-white p-2 rounded-lg w-full">
-                <i class="bi bi-box-seam text-xl"></i><span class="text-xs">Pengiriman</span>
+        {{-- PENYESUAIAN: Navigasi Mobile diubah agar konsisten --}}
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
+            <a href="/driver/dashboard" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
+                <i class="bi bi-box-seam text-2xl"></i>
+                <span class="text-xs">Pengiriman</span>
             </a>
-            <a href="/driver/riwayat"
-                class="active flex flex-col items-center justify-center text-teal-400 p-2 rounded-lg w-full">
-                <i class="bi bi-clock-history text-xl"></i><span class="text-xs">Riwayat</span>
+            <a href="/driver/riwayat" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
+                <i class="bi bi-clock-history text-2xl"></i>
+                <span class="text-xs">Riwayat</span>
             </a>
         </nav>
 
@@ -469,4 +470,3 @@
 </body>
 
 </html>
-

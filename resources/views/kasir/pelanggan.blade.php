@@ -338,10 +338,19 @@
                 <h1 class="text-lg font-semibold text-slate-800">Daftar Pelanggan</h1>
             </div>
             <div class="relative">
+                {{-- Ganti bagian ini di header setiap halaman kasir --}}
+                {{-- ...existing code... --}}
                 <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                     <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                    <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                    @if (Auth::user()->profile_photo)
+                        <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                            alt="Foto Profil" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                    @else
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
+                            alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
+                    @endif
                 </button>
+                {{-- ...existing code... --}}
                 <div id="user-menu"
                     class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
                     <a href="pengaturan"
@@ -445,8 +454,10 @@
                                 <div class="action-buttons flex items-center gap-2">
                                     <button
                                         class="btn-detail detail-btn flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
-                                        data-nama="{{ $pelanggan->nama }}" data-phone="{{ $pelanggan->no_handphone }}"
-                                        data-provinsi="{{ $pelanggan->provinsi }}" data-kota="{{ $pelanggan->kota }}"
+                                        data-nama="{{ $pelanggan->nama }}"
+                                        data-phone="{{ $pelanggan->no_handphone }}"
+                                        data-provinsi="{{ $pelanggan->provinsi }}"
+                                        data-kota="{{ $pelanggan->kota }}"
                                         data-kecamatan="{{ $pelanggan->kecamatan }}"
                                         data-desa="{{ $pelanggan->desa }}" data-kodepos="{{ $pelanggan->kodepos }}"
                                         data-alamat="{{ $pelanggan->detail_alamat }}">
@@ -849,7 +860,7 @@
 
                 kecSelect.addEventListener('change', function() {
                     hiddenInputs.kecamatan.value = (this.value) ? this.options[this.selectedIndex].text :
-                    '';
+                        '';
                     hiddenInputs.desa.value = '';
 
                     populateSelect(`${apiBaseUrl}/villages/${this.value}.json`, desaSelect,
@@ -904,7 +915,7 @@
                         document.getElementById('edit_no_handphone').value = data.no_handphone;
                         document.getElementById('edit_kodepos').value = data.kodepos;
                         document.getElementById('edit_detail_alamat').value = data
-                        .detail_alamat;
+                            .detail_alamat;
 
                         editHiddenInputs.provinsi.value = data.provinsi;
                         editHiddenInputs.kota.value = data.kota;
@@ -950,7 +961,7 @@
                     document.getElementById('detail-kodepos').textContent = btn.dataset.kodepos ||
                         '-';
                     document.getElementById('detail-alamat').textContent = btn.dataset.alamat ||
-                    '-';
+                        '-';
 
                     // Show modal
                     detailModal.classList.remove('hidden');

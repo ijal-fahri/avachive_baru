@@ -104,13 +104,23 @@
                 <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="text-lg font-semibold text-slate-800">Dashboard Kasir Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
+                <h1 class="text-lg font-semibold text-slate-800">Dashboard Kasir Cabang
+                    {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
             </div>
             <div class="relative">
+                {{-- Ganti bagian ini di header setiap halaman kasir --}}
+                {{-- ...existing code... --}}
                 <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                     <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                    <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                    @if (Auth::user()->profile_photo)
+                        <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                            alt="Foto Profil" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                    @else
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
+                            alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
+                    @endif
                 </button>
+                {{-- ...existing code... --}}
                 <div id="user-menu"
                     class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
                     <a href="pengaturan"
