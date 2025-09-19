@@ -149,7 +149,8 @@
                     <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md">
                         <h3 class="font-semibold mb-4 text-slate-700">Tren Pendapatan</h3>
                         <div class="h-64 relative">
-                            @if(count($revenueTrend) > 1)
+                            {{-- PERBAIKAN DI SINI: Mengubah kondisi dari > 1 menjadi > 0 --}}
+                            @if(count($revenueTrend) > 0 && max(array_values($revenueTrend)) > 0)
                                 <canvas id="revenueChart"></canvas>
                             @else
                                 <div class="flex items-center justify-center h-full text-slate-400">
@@ -297,7 +298,7 @@
         const setupCharts = () => {
             // Chart Tren Pendapatan
             const revCtx = document.getElementById('revenueChart');
-            if (revCtx && Object.keys(revenueTrendData).length > 1) {
+            if (revCtx && Object.keys(revenueTrendData).length > 0 && Math.max(...Object.values(revenueTrendData)) > 0) {
                 new Chart(revCtx, {
                     type: 'line',
                     data: {
