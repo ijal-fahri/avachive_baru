@@ -3,105 +3,119 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\BuatOrder;
-use App\Models\TambahPelanggan;
 use App\Models\Cabang;
+use App\Models\TambahPelanggan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class OwnerLaporanController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Ambil semua cabang untuk filter
-        $semuaCabang = Cabang::all();
+        // --- 1. PENGAMBILAN DATA & FILTER ---
+        $cabangs = Cabang::orderBy('nama_cabang')->get();
+        $selectedCabang = $request->input('cabang_id', 'semua');
+        $selectedPeriode = $request->input('periode', 'bulan_ini');
 
-        // 2. Tentukan periode tanggal berdasarkan filter
-        $periode = $request->input('periode', 'bulan_ini');
-        $endDate = Carbon::now()->endOfDay();
-        // Set default start date, will be overridden by match
-        $startDate = Carbon::now()->startOfMonth(); 
+        // Query dasar untuk order dengan relasi yang dibutuhkan
+        $ordersQuery = BuatOrder::with(['pelanggan', 'cabang']);
 
-        // Menggunakan 'match' untuk kode yang lebih bersih
-        $startDate = match ($periode) {
-            'hari_ini' => Carbon::now()->startOfDay(),
-            '7_hari' => Carbon::now()->subDays(6)->startOfDay(),
-            default => Carbon::now()->startOfMonth(),
-        };
-
-        // 3. Query dasar dengan Eager Loading untuk efisiensi
-        // Mengambil relasi 'pelanggan' dan 'cabang' sekali saja untuk menghindari N+1 query problem
-        $orderQuery = BuatOrder::with(['pelanggan', 'cabang'])
-                        ->whereBetween('created_at', [$startDate, $endDate]);
-
-        $pelangganQuery = TambahPelanggan::query()
-                            ->whereBetween('created_at', [$startDate, $endDate]);
-
-        // 4. Terapkan filter cabang jika dipilih
-        $cabangId = $request->input('cabang_id');
-        if ($cabangId && $cabangId !== 'semua') {
-            $orderQuery->where('cabang_id', $cabangId);
-            $pelangganQuery->where('cabang_id', $cabangId);
+        // Filter berdasarkan cabang
+        if ($selectedCabang && $selectedCabang !== 'semua') {
+            $ordersQuery->where('cabang_id', $selectedCabang);
         }
 
-        // --- 5. EKSEKUSI & KALKULASI DATA ---
-        $semuaOrder = $orderQuery->get(); // Eksekusi query sekali dan gunakan hasilnya
+        // Filter berdasarkan periode waktu
+        $startDate = now()->startOfDay();
+        $endDate = now()->endOfDay();
 
-        $totalPendapatan = $semuaOrder->sum('total_harga');
-        $jumlahTransaksi = $semuaOrder->count();
-        $orderSelesai = $semuaOrder->where('status', 'Selesai')->count();
-        $pelangganBaru = $pelangganQuery->count();
-
-        // OPTIMASI: Menghitung Pemasukan Tertinggi/Terendah per CABANG, bukan per transaksi
-        // Ini lebih sesuai dengan tampilan di Blade-mu
-        $pendapatanPerCabang = $semuaOrder->groupBy('cabang.nama_cabang')
-                                         ->map(fn($orders) => $orders->sum('total_harga'))
-                                         ->sortDesc();
-
-        $pemasukanTertinggi = $pendapatanPerCabang->keys()->first() ?? '-';
-        $pemasukanTerendah = $pendapatanPerCabang->keys()->last() ?? '-';
-        // Jika hanya ada 1 cabang, pemasukan terendah akan sama dengan tertinggi
-        if ($pendapatanPerCabang->count() <= 1) {
-            $pemasukanTerendah = '-';
+        if ($selectedPeriode == '7_hari') {
+            $startDate = now()->subDays(6)->startOfDay();
+        } elseif ($selectedPeriode == 'bulan_ini') {
+            $startDate = now()->startOfMonth();
         }
+        
+        $ordersQuery->whereBetween('created_at', [$startDate, $endDate]);
+        
+        // Ambil semua order yang sudah difilter
+        $filteredOrders = $ordersQuery->get();
+
+        // --- 2. PENGOLAHAN DATA STATISTIK ---
+        $totalPendapatan = $filteredOrders->sum('total_harga');
+        $jumlahTransaksi = $filteredOrders->count();
+        $orderSelesai = $filteredOrders->where('status', 'Selesai')->count();
+        
+        // Statistik pelanggan baru berdasarkan filter
+        $pelangganBaruQuery = TambahPelanggan::whereBetween('created_at', [$startDate, $endDate]);
+        if ($selectedCabang && $selectedCabang !== 'semua') {
+            $pelangganBaruQuery->where('cabang_id', $selectedCabang);
+        }
+        $pelangganBaru = $pelangganBaruQuery->count();
+
+        // Statistik pemasukan tertinggi & terendah
+        $pemasukanTertinggi = $filteredOrders->max('total_harga') ?? 0;
+        $pemasukanTerendah = $filteredOrders->min('total_harga') ?? 0;
 
 
-        // 6. Data untuk Grafik Pendapatan
-        $revenueTrend = $semuaOrder
-            ->groupBy(fn($order) => Carbon::parse($order->created_at)->format('Y-m-d'))
-            ->map(fn($group) => $group->sum('total_harga'))
-            ->sortKeys();
-            
-        // 7. Data untuk Grafik Layanan Terlaris (logika tetap sama, sudah cukup baik)
+        // --- 3. PENGOLAHAN DATA UNTUK GRAFIK (BAGIAN PENTING) ---
+        
+        // Inisialisasi data untuk grafik
+        $revenueTrend = [];
         $layananCounts = [];
-        foreach ($semuaOrder as $order) {
-            $services = json_decode($order->layanan, true) ?? [];
-            foreach ($services as $service) {
-                $nama = $service['nama'] ?? 'N/A';
-                $kuantitas = is_numeric($service['kuantitas'] ?? 0) ? $service['kuantitas'] : 0;
-                $layananCounts[$nama] = ($layananCounts[$nama] ?? 0) + $kuantitas;
+
+        // Inisialisasi tren pendapatan dengan nilai 0 untuk setiap hari dalam periode
+        $currentDate = $startDate->copy();
+        while ($currentDate <= $endDate) {
+            $revenueTrend[$currentDate->format('Y-m-d')] = 0;
+            $currentDate->addDay();
+        }
+
+        // Loop melalui setiap order untuk mengisi data grafik
+        foreach ($filteredOrders as $order) {
+            // Mengisi data tren pendapatan
+            $orderDate = Carbon::parse($order->created_at)->format('Y-m-d');
+            if (isset($revenueTrend[$orderDate])) {
+                $revenueTrend[$orderDate] += $order->total_harga;
+            }
+
+            // Mengisi data layanan terlaris dengan "membongkar" JSON
+            $layananItems = json_decode($order->layanan, true);
+            if (is_array($layananItems)) {
+                foreach ($layananItems as $item) {
+                    if (isset($item['nama'])) {
+                        $namaLayanan = $item['nama'];
+                        $kuantitas = $item['kuantitas'] ?? 1;
+                        if (!isset($layananCounts[$namaLayanan])) {
+                            $layananCounts[$namaLayanan] = 0;
+                        }
+                        $layananCounts[$namaLayanan] += $kuantitas;
+                    }
+                }
             }
         }
+        
+        // Urutkan layanan terlaris dari yang paling banyak
         arsort($layananCounts);
-        $layananTerlaris = array_slice($layananCounts, 0, 5, true);
+        $layananTerlaris = array_slice($layananCounts, 0, 5); // Ambil 5 teratas
 
-        // 8. Data untuk Tabel Transaksi Terbaru (menggunakan data yang sudah di-fetch)
-        $transaksiTerbaru = $semuaOrder->sortByDesc('created_at')->take(10);
+        // Mengambil 5 transaksi terbaru untuk ditampilkan di tabel
+        $transaksiTerbaru = $filteredOrders->sortByDesc('created_at')->take(10);
 
-        return view('owner.laporan.index', [
-            'cabangs' => $semuaCabang,
-            'selectedCabang' => $cabangId,
-            'selectedPeriode' => $periode, // <-- Kirim ini ke view untuk set default value di dropdown
-            'totalPendapatan' => $totalPendapatan,
-            'jumlahTransaksi' => $jumlahTransaksi,
-            'orderSelesai' => $orderSelesai,
-            'pelangganBaru' => $pelangganBaru,
-            'pemasukanTertinggi' => $pemasukanTertinggi,
-            'pemasukanTerendah' => $pemasukanTerendah,
-            'revenueTrend' => $revenueTrend,
-            'layananTerlaris' => $layananTerlaris,
-            'transaksiTerbaru' => $transaksiTerbaru,
-        ]);
+        return view('owner.laporan.index', compact(
+            'cabangs',
+            'selectedCabang',
+            'selectedPeriode',
+            'totalPendapatan',
+            'jumlahTransaksi',
+            'orderSelesai',
+            'pelangganBaru',
+            'pemasukanTertinggi',
+            'pemasukanTerendah',
+            'revenueTrend',
+            'layananTerlaris',
+            'transaksiTerbaru'
+        ));
     }
 }
