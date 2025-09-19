@@ -19,8 +19,6 @@
 
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        
-        /* STYLING KONSISTEN UNTUK DATATABLES */
         .form-input, 
         #adminTable_wrapper .dt-search input, 
         #adminTable_wrapper .dt-length select { width: 100%; background-color: white !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-radius: 0.5rem !important; padding: 0.6rem 1rem !important; transition: all 0.2s ease-in-out; outline: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
@@ -38,18 +36,9 @@
         #adminTable_wrapper .dt-bottom-row { margin-top: 1.5rem; }
         @media (min-width: 768px) { #adminTable_wrapper .dt-controls-row, #adminTable_wrapper .dt-bottom-row { flex-direction: row; justify-content: space-between; align-items: center; } }
         #adminTable { border-collapse: collapse; }
-        
         #adminTable thead th { font-weight: 600; text-align: left; padding: 0.75rem 0.5rem; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
         #adminTable tbody td { padding: 0.75rem 0.5rem; color: #334155; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; }
-        
-        @media (min-width: 768px) {
-            #adminTable thead th,
-            #adminTable tbody td { 
-                padding: 1rem 1.25rem;
-                font-size: 0.875rem;
-            }
-        }
-
+        @media (min-width: 768px) { #adminTable thead th, #adminTable tbody td { padding: 1rem 1.25rem; font-size: 0.875rem; } }
         #adminTable tbody tr:last-child td { border-bottom: none; }
         #adminTable tbody tr:hover { background-color: #f8fafc; }
         #adminTable_wrapper .dt-info { color: #64748b; font-size: 0.875rem; }
@@ -57,32 +46,12 @@
         #adminTable_wrapper .dt-paging .dt-paging-button:not(.disabled):hover { background-color: #f1f5f9 !important; border-color: #94a3b8 !important; }
         #adminTable_wrapper .dt-paging .dt-paging-button.current { background-color: #14b8a6 !important; color: #ffffff !important; border-color: #14b8a6 !important; }
         #adminTable_wrapper .dt-paging .dt-paging-button.disabled { color: #94a3b8 !important; background-color: #f8fafc !important; }
-        
         @keyframes modal-in { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .animate-modal-in { animation: modal-in 0.3s ease-out; }
-
-        /* Custom Styling untuk Loading Overlay DataTables */
-        #adminTable_wrapper .dataTables_processing {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            box-shadow: none;
-            margin-top: 0 !important;
-            padding: 0 !important;
-        }
     </style>
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        {{-- ===== SIDEBAR (Desktop Only) ===== --}}
         <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
             <div>
                 <div class="flex flex-col items-center text-center mb-10">
@@ -101,7 +70,6 @@
         </aside>
 
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
-            {{-- ===== HEADER ===== --}}
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-semibold text-slate-800">Manajemen Admin</h1>
@@ -111,8 +79,12 @@
                         <i class="bi bi-plus-circle-fill"></i><span class="hidden sm:block">Tambah Admin</span>
                     </button>
                     <div class="relative">
-                        <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all">
-                            {{ strtoupper(substr(Auth::user()->name ?? 'O', 0, 1)) }}
+                        <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all overflow-hidden">
+                            @if(Auth::user()->profile_photo)
+                                <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto" class="w-full h-full object-cover">
+                            @else
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            @endif
                         </button>
                         <div id="profileDropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl hidden z-10 border">
                             <div class="p-2">
@@ -141,7 +113,7 @@
                         <select id="cabangFilter" name="cabang_id" class="form-input w-full md:w-1/3">
                             <option value="semua">Semua Cabang</option>
                             @foreach ($cabangs as $cabang)
-                                <option value="{{ $cabang->id }}" {{ $selectedCabang == $cabang->id ? 'selected' : '' }}>
+                                <option value="{{ $cabang->id }}">
                                     {{ $cabang->nama_cabang }}
                                 </option>
                             @endforeach
@@ -172,7 +144,7 @@
     {{-- MODAL TAMBAH/EDIT --}}
     <div id="adminFormModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md animate-modal-in">
-            <form id="adminForm" action="" method="POST" class="p-6">
+            <form id="adminForm" action="" method="POST" class="p-6" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod">
                 <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -184,12 +156,12 @@
                         <label class="block text-sm font-medium text-slate-600 mb-1">Foto Profil</label>
                         <div class="flex items-center gap-4">
                             <img id="imagePreview" src="https://ui-avatars.com/api/?name=?&background=e2e8f0&color=64748b" alt="Avatar" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200">
-                            <div class="opacity-50">
-                                <label for="profile_photo_dummy" class="cursor-not-allowed bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm">
+                            <div>
+                                <label for="profile_photo" class="cursor-pointer bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg text-sm hover:bg-slate-200 transition-colors">
                                     Pilih Foto
                                 </label>
-                                <input type="file" id="profile_photo_dummy" class="hidden" disabled>
-                                <p class="text-xs text-slate-500 mt-2">Fitur ini belum tersedia.</p>
+                                <input type="file" id="profile_photo" name="profile_photo" class="hidden">
+                                <p class="text-xs text-slate-500 mt-2">Opsional. Maks 2MB.</p>
                             </div>
                         </div>
                     </div>
@@ -247,7 +219,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- DataTable Initialization ---
         const adminTable = $('#adminTable').DataTable({
             dom: '<"dt-controls-row"<"dt-length"l><"dt-search"f>>t<"dt-bottom-row"<"dt-info"i><"dt-paging"p>>',
             processing: true,
@@ -257,19 +228,18 @@
                 url: "{{ route('owner.admins.data') }}",
                 type: 'POST',
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: function(d) {
-                    d.cabang_id = $('#cabangFilter').val();
-                }
+                data: d => { d.cabang_id = $('#cabangFilter').val(); }
             },
             columns: [
                 { data: 'no', name: 'no', orderable: false, searchable: false },
                 { 
-                    data: 'name', 
+                    data: 'profile_photo', 
                     name: 'foto', 
                     orderable: false, 
                     searchable: false,
                     render: function(data, type, row) {
-                        return `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(data)}&background=14b8a6&color=fff&size=40" alt="${data}" class="w-10 h-10 rounded-full object-cover">`;
+                        const photoUrl = data ? `{{ asset('storage') }}/${data}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name)}&background=14b8a6&color=fff&size=40`;
+                        return `<img src="${photoUrl}" alt="${row.name}" class="w-10 h-10 rounded-full object-cover">`;
                     }
                 },
                 { data: 'name', name: 'name', className: 'font-semibold' },
@@ -285,7 +255,7 @@
                             <div class="flex items-center gap-2">
                                 <span id="pass-text-${row.id}" class="text-slate-400 tracking-wider transition-all duration-200">••••••••</span>
                                 <button class="toggle-pass-btn text-slate-500 hover:text-slate-800 text-lg" 
-                                    data-id="${row.id}" data-password="${data}">
+                                        data-id="${row.id}" data-password="${data}">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
                             </div>
@@ -301,7 +271,7 @@
                     render: function(data, type, row) {
                         return `
                             <div class="flex gap-2 justify-center">
-                                <button class="btn-edit w-9 h-9 flex items-center justify-center rounded-lg bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all" data-id="${data}" data-name="${row.name}" data-cabang_id="${row.cabang_id}">
+                                <button class="btn-edit w-9 h-9 flex items-center justify-center rounded-lg bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all" data-id="${data}">
                                     <span class="sr-only">Edit</span><i class="bi bi-pencil-square"></i>
                                 </button>
                                 <form method="POST" action="{{ url('owner/dataadmin') }}/${data}" class="delete-form">
@@ -316,42 +286,25 @@
                     }
                 }
             ],
-            language: {
-                search: "",
-                searchPlaceholder: "Cari admin atau cabang...",
-                lengthMenu: "Tampil _MENU_ entri",
-                emptyTable: `<div class="text-center p-10"><i class="bi bi-person-badge text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Belum Ada Admin</h4><p class="text-slate-500">Gunakan tombol 'Tambah Admin' untuk membuat data baru.</p></div>`,
-                zeroRecords: `<div class="text-center p-10"><i class="bi bi-search text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Admin Tidak Ditemukan</h4><p class="text-slate-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p></div>`,
-                info: "Menampilkan _START_ - _END_ dari _TOTAL_ entri",
-                infoEmpty: "Menampilkan 0 entri",
-                infoFiltered: "(disaring dari _MAX_ total entri)",
-                paginate: { next: ">", previous: "<" },
-                // ===== [ PERUBAHAN ] =====
-                // Mengganti animasi pulse menjadi spin dan membuat logo bulat
-                processing: `
-                    <div class="flex flex-col items-center justify-center">
-                        <img src="{{ asset('images/logo.png') }}" alt="Memuat..." class="h-16 w-16 rounded-full animate-spin mb-4">
-                        <span class="text-slate-600 font-semibold">Memuat Data...</span>
-                    </div>
-                `,
-            }
+            language: { /* ... Bahasa ... */ }
         });
 
-        // --- Event Listeners ---
         const adminFormModal = document.getElementById('adminFormModal');
         const adminForm = document.getElementById('adminForm');
         const modalTitle = document.getElementById('modalTitle');
         const formMethodInput = document.getElementById('formMethod');
         const passwordHint = document.getElementById('password-hint');
         const imagePreview = document.getElementById('imagePreview');
+        const profilePhotoInput = document.getElementById('profile_photo');
 
         const openModal = (mode, data = {}) => {
             adminForm.reset();
+            profilePhotoInput.value = ''; // Reset input file
             if (mode === 'add') {
                 modalTitle.textContent = 'Tambah Admin Baru';
                 adminForm.action = "{{ route('owner.dataadmin.store') }}";
                 formMethodInput.value = 'POST';
-                document.getElementById('password').setAttribute('required', 'true');
+                $('#password').prop('required', true);
                 passwordHint.style.display = 'none';
                 imagePreview.src = "https://ui-avatars.com/api/?name=?&background=e2e8f0&color=64748b";
             } else {
@@ -360,9 +313,9 @@
                 formMethodInput.value = 'PUT';
                 $('#name').val(data.name);
                 $('#cabang_id_modal').val(data.cabang_id);
-                document.getElementById('password').removeAttribute('required');
+                $('#password').prop('required', false);
                 passwordHint.style.display = 'block';
-                imagePreview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=14b8a6&color=fff`;
+                imagePreview.src = data.profile_photo_url ? data.profile_photo_url : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=14b8a6&color=fff`;
             }
             adminFormModal.classList.replace('hidden', 'flex');
         };
@@ -373,28 +326,32 @@
         $('.close-modal-btn, .cancel-btn').on('click', closeModal);
         
         $('#adminTable tbody').on('click', '.btn-edit', function() {
-            openModal('edit', $(this).data());
+            const adminId = $(this).data('id');
+            // Fetch data dari server untuk memastikan data terbaru (termasuk foto)
+            fetch(`{{ url('owner/dataadmin') }}/${adminId}`)
+                .then(response => response.json())
+                .then(data => {
+                    openModal('edit', data);
+                });
         });
 
         $('#adminTable tbody').on('click', '.delete-form', function(e) {
-             e.preventDefault();
-             const form = this;
-             Swal.fire({
-                 title: 'Anda yakin?', text: 'Data admin ini akan dihapus permanen!', icon: 'warning',
-                 showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6b7280',
-                 confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
-             }).then((result) => { if (result.isConfirmed) form.submit(); });
+            e.preventDefault();
+            const form = this;
+            Swal.fire({
+                title: 'Anda yakin?', text: 'Data admin ini akan dihapus permanen!', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+            }).then((result) => { if (result.isConfirmed) form.submit(); });
         });
 
         $('#adminTable tbody').on('click', '.toggle-pass-btn', function() {
             const btn = $(this);
-            const adminId = btn.data('id');
-            const password = btn.data('password');
-            const passTextSpan = $(`#pass-text-${adminId}`);
+            const passTextSpan = $(`#pass-text-${btn.data('id')}`);
             const eyeIcon = btn.find('i');
             
             if (eyeIcon.hasClass('bi-eye-fill')) {
-                passTextSpan.text(password).removeClass('text-slate-400 tracking-wider').addClass('text-slate-700 font-semibold');
+                passTextSpan.text(btn.data('password')).removeClass('text-slate-400 tracking-wider').addClass('text-slate-700 font-semibold');
                 eyeIcon.removeClass('bi-eye-fill').addClass('bi-eye-slash-fill');
             } else {
                 passTextSpan.text('••••••••').addClass('text-slate-400 tracking-wider').removeClass('text-slate-700 font-semibold');
@@ -404,6 +361,14 @@
         
         $('#cabangFilter').on('change', () => adminTable.ajax.reload());
 
+        // --- Image Preview Logic ---
+        profilePhotoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                imagePreview.src = URL.createObjectURL(file);
+            }
+        });
+        
         // --- UI Scripts ---
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
@@ -434,11 +399,21 @@
                 html: `<ul class="mt-2 list-disc list-inside text-sm text-left">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>`,
                 confirmButtonColor: '#14b8a6'
             });
-            openModal("{{ session('error_modal_type', 'add') }}", {
-                id: "{{ old('id') }}", 
-                name: "{{ old('name') }}",
-                cabang_id: "{{ old('cabang_id') }}"
-            });
+            // Buka kembali modal dengan data lama jika ada error
+            @if(session('error_modal_type') === 'edit')
+                fetch(`{{ url('owner/dataadmin') }}/{{ session('error_id') }}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        openModal('edit', data);
+                        // Isi kembali dengan old input
+                        $('#name').val("{{ old('name') }}");
+                        $('#cabang_id_modal').val("{{ old('cabang_id') }}");
+                    });
+            @else
+                openModal('add');
+                $('#name').val("{{ old('name') }}");
+                $('#cabang_id_modal').val("{{ old('cabang_id') }}");
+            @endif
         @endif
     });
     </script>

@@ -15,9 +15,8 @@ class LayananController extends Controller
      */
     public function index()
     {
-        $cabangId = Auth::user()->cabang_id;
-        $layanans = Layanan::where('cabang_id', $cabangId)->latest()->get(); 
-        return view('admin.layanan.index', compact('layanans'));
+        // Mengambil data layanan untuk halaman utama (opsional jika semua via AJAX)
+        return view('admin.layanan.index');
     }
 
     /**
@@ -30,16 +29,14 @@ class LayananController extends Controller
             'paket' => 'required|string',
             'kategori' => 'required|string|in:Kiloan,Satuan',
             'harga' => 'required|numeric|min:0',
+            'diskon' => 'nullable|numeric|min:0|max:100', // Validasi untuk diskon
         ]);
 
         if ($validator->fails()) {
             return redirect()->route('produk.index')
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error_modal', 'tambah')
-                ->with('error_modal_title', 'Gagal Menambah Layanan')
-                ->with('error_modal_action', route('produk.store'))
-                ->with('error_modal_method', 'POST');
+                ->with('error_modal', 'tambah');
         }
 
         Layanan::create([
@@ -47,7 +44,8 @@ class LayananController extends Controller
             'paket' => $request->paket,
             'kategori' => $request->kategori,
             'harga' => $request->harga,
-            'cabang_id' => Auth::user()->cabang_id, // Otomatis terisi
+            'diskon' => $request->diskon ?? 0, // Simpan diskon, default 0 jika null
+            'cabang_id' => Auth::user()->cabang_id,
         ]);
 
         return redirect()->route('produk.index')->with('success', 'Layanan berhasil ditambahkan.');
@@ -67,6 +65,7 @@ class LayananController extends Controller
             'paket' => 'required|string',
             'kategori' => 'required|string|in:Kiloan,Satuan',
             'harga' => 'required|numeric|min:0',
+            'diskon' => 'nullable|numeric|min:0|max:100', // Validasi untuk diskon
         ]);
 
         if ($validator->fails()) {
@@ -74,13 +73,16 @@ class LayananController extends Controller
                 ->withErrors($validator)
                 ->withInput()
                 ->with('error_modal', 'edit')
-                ->with('error_modal_title', 'Gagal Mengedit Layanan')
-                ->with('error_modal_action', route('produk.update', $produk->id))
-                ->with('error_modal_method', 'PUT')
                 ->with('error_id', $produk->id);
         }
 
-        $produk->update($request->all());
+        $produk->update([
+            'nama' => $request->nama,
+            'paket' => $request->paket,
+            'kategori' => $request->kategori,
+            'harga' => $request->harga,
+            'diskon' => $request->diskon ?? 0,
+        ]);
 
         return redirect()->route('produk.index')->with('success', 'Layanan berhasil diperbarui.');
     }
@@ -99,27 +101,18 @@ class LayananController extends Controller
         return redirect()->route('produk.index')->with('success', 'Layanan berhasil dihapus.');
     }
 
-
-    // ====================================================================
-    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
-    // ====================================================================
-
     /**
      * Menyediakan data untuk DataTables dengan server-side processing.
      */
     public function getLayananData(Request $request)
     {
         $cabangId = Auth::user()->cabang_id;
-
-        // Query dasar hanya untuk layanan di cabang ini
         $query = Layanan::where('cabang_id', $cabangId);
 
-        // Filter berdasarkan kategori (dari tab filter)
         if ($request->filled('kategori')) {
             $query->where('kategori', $request->kategori);
         }
 
-        // Filter berdasarkan pencarian DataTables
         if ($request->filled('search.value')) {
             $searchValue = $request->input('search.value');
             $query->where(function($q) use ($searchValue) {
@@ -128,25 +121,19 @@ class LayananController extends Controller
             });
         }
 
-        // Hitung total record sebelum paginasi
         $recordsFiltered = $query->count();
-        
-        // Ambil data sesuai paginasi dari DataTables
-        $layanans = $query->skip($request->start)
-                          ->take($request->length)
-                          ->latest()
-                          ->get();
+        $layanans = $query->skip($request->start)->take($request->length)->latest()->get();
 
-        // Format data untuk respons JSON
         $data = [];
         foreach ($layanans as $key => $layanan) {
-            $hargaFormatted = 'Rp ' . number_format($layanan->harga, 0, ',', '.') . ' / ' . ($layanan->kategori == 'Kiloan' ? 'Kg' : 'Pcs');
+            // PERUBAHAN: Mengirim data harga dan diskon secara terpisah
             $data[] = [
                 'no' => $request->start + $key + 1,
                 'nama' => $layanan->nama,
                 'paket' => $layanan->paket,
-                'harga' => $hargaFormatted,
-                'json' => $layanan, // Kirim data mentah untuk modal edit
+                'harga_asli' => $layanan->harga,
+                'diskon' => $layanan->diskon,
+                'json' => $layanan,
             ];
         }
         

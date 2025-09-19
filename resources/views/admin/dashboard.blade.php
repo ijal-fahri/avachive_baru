@@ -57,23 +57,25 @@
                 <div class="p-4 sm:p-6 pb-28 md:pb-6">
                     <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
                         <div class="flex items-center gap-4">
-                            <h1 class="text-base sm:text-lg font-semibold text-slate-800">Dashboard Admin Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Pusat' }}</h1>
+                            <h1 class="text-lg font-semibold text-slate-800">Dashboard Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
                         </div>
                         <div class="relative">
                             <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                                 <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                                <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                    @if(Auth::user()->profile_photo)
+                                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil" class="w-full h-full object-cover">
+                                    @else
+                                        <i class="bi bi-person-circle text-xl text-slate-600"></i>
+                                    @endif
+                                </div>
                             </button>
                             <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
-                                <a href="pengaturan" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                                    <i class="bi bi-person-circle"></i><span>Profile</span>
-                                </a>
+                                 <a href="{{ route('admin.profile.index') }}" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"><i class="bi bi-person-circle"></i><span>Profile</span></a>
                                 <div class="border-t border-slate-200 my-1"></div>
                                 <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                     @csrf
-                                    <button type="button" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                        <i class="bi bi-box-arrow-right"></i><span>Logout</span>
-                                    </button>
+                                    <button type="button" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
                                 </form>
                             </div>
                         </div>
@@ -247,18 +249,48 @@
                     const layananItems = JSON.parse(order.layanan);
                     if (layananItems && layananItems.length > 0) {
                         layananItems.forEach(item => {
+                            // --- PERUBAHAN ADA DI SINI ---
+                            const hargaFinalPerItem = item.harga || 0;
+                            const kuantitas = item.kuantitas || 1;
+                            // Subtotal dihitung dari harga final (setelah diskon)
+                            const subtotal = hargaFinalPerItem * kuantitas; 
+                            const diskon = item.diskon || 0;
+                            const hargaAsli = item.harga_asli || 0;
+                            const hasDiscount = diskon > 0 && hargaAsli > 0;
+
+                            let detailLayananHTML = '<div class="text-slate-600 pl-2 grid grid-cols-[auto_1fr] gap-x-2 text-xs">';
+                            
+                            if (hasDiscount) {
+                                detailLayananHTML += `
+                                    <span>Harga Asli</span> <span>: <del class="text-red-500">Rp ${new Intl.NumberFormat('id-ID').format(hargaAsli)}</del></span>
+                                    <span>Diskon</span> <span>: ${diskon}%</span>
+                                    <span>Harga Final</span> <span>: Rp ${new Intl.NumberFormat('id-ID').format(hargaFinalPerItem)}</span>
+                                `;
+                            } else {
+                                detailLayananHTML += `
+                                    <span>Harga</span> <span>: Rp ${new Intl.NumberFormat('id-ID').format(hargaFinalPerItem)}</span>
+                                `;
+                            }
+
+                            detailLayananHTML += `
+                                <span>Jumlah</span><span>: ${kuantitas}</span>
+                                <span class="font-semibold">Subtotal</span><span class="font-semibold">: Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}</span>
+                            `;
+                            
+                            detailLayananHTML += '</div>';
+
                             layananHTML += `
                                 <div class="border-t pt-2 mt-2 first:mt-0 first:pt-0 first:border-t-0">
                                     <p class="font-semibold text-slate-800">${item.nama || 'N/A'}</p>
-                                    <div class="text-slate-600 pl-2 grid grid-cols-[auto_1fr] gap-x-2 text-xs">
-                                        <span>Harga</span> <span>: Rp ${new Intl.NumberFormat('id-ID').format(item.harga || 0)}</span>
-                                        <span>Jumlah</span><span>: ${item.kuantitas || 0}</span>
-                                        <span>Subtotal</span><span>: Rp ${new Intl.NumberFormat('id-ID').format(item.subtotal || 0)}</span>
-                                    </div>
+                                    ${detailLayananHTML}
                                 </div>`;
+                            // --- AKHIR DARI PERUBAHAN ---
                         });
                     }
-                } catch (e) { layananHTML = '<p>Gagal memuat detail layanan.</p>'; }
+                } catch (e) { 
+                    console.error("Gagal mem-parsing detail layanan:", e);
+                    layananHTML = '<p>Gagal memuat detail layanan.</p>'; 
+                }
 
                 const tglSelesai = new Date(order.waktu_pembayaran).getTime() > 0 
                                      ? new Date(order.waktu_pembayaran).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short'})

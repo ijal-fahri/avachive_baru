@@ -34,15 +34,13 @@ class DriverPengaturanController extends Controller
         }
 
         if ($request->hasFile('profile_photo')) {
-            $file = $request->file('profile_photo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/profile_photos'), $filename);
-
-            if ($user->profile_photo && file_exists(public_path('uploads/profile_photos/' . $user->profile_photo))) {
-                unlink(public_path('uploads/profile_photos/' . $user->profile_photo));
+            // Hapus foto lama jika ada di storage
+            if ($user->profile_photo && \Storage::disk('public')->exists($user->profile_photo)) {
+                \Storage::disk('public')->delete($user->profile_photo);
             }
-
-            $user->profile_photo = $filename;
+            // Simpan foto baru ke storage/app/public/profile-photos
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $user->profile_photo = $path;
         }
 
         $user->save();

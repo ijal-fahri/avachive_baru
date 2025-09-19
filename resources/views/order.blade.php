@@ -86,18 +86,23 @@
         <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
             <main class="flex-1 overflow-y-auto">
                 <div class="p-4 sm:p-6 pb-28 md:pb-6">
-                    
-                    <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+                    <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
                         <div class="flex items-center gap-4">
-                            <h1 class="text-base sm:text-lg font-semibold text-slate-800">Laporan Pemasukan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Pusat' }}</h1>
+                            <h1 class="text-lg font-semibold text-slate-800">Laporan Pemasukan Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
                         </div>
                         <div class="relative">
                             <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                                 <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
-                                <i class="bi bi-person-circle text-2xl text-slate-600"></i>
+                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                    @if(Auth::user()->profile_photo)
+                                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil" class="w-full h-full object-cover">
+                                    @else
+                                        <i class="bi bi-person-circle text-xl text-slate-600"></i>
+                                    @endif
+                                </div>
                             </button>
-                            <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 transition-all duration-300">
-                                <a href="pengaturan" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"><i class="bi bi-person-circle"></i><span>Profile</span></a>
+                            <div id="user-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
+                                 <a href="{{ route('admin.profile.index') }}" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"><i class="bi bi-person-circle"></i><span>Profile</span></a>
                                 <div class="border-t border-slate-200 my-1"></div>
                                 <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                     @csrf

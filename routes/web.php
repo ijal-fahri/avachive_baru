@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\CabangController;
 use App\Http\Controllers\Admin\LayananController;
 use App\Http\Controllers\Admin\DataOrderController;
 use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Middleware\EnsureCabangIsSelected;
 
 // Kasir Controllers
@@ -84,15 +85,15 @@ Route::middleware('auth')->group(function () {
         Route::resource('pengguna', PenggunaController::class)->names(['index' => 'datauser']);
         Route::post('/karyawan/data', [PenggunaController::class, 'getKaryawanData'])->name('karyawan.data');
 
-        // Fitur Pengaturan
-        Route::get('/pengaturan', function () { return view('pengaturan'); })->name('pengaturan');
+        Route::get('/profile', [AdminProfileController::class, 'index'])->name('admin.profile.index');
+        Route::patch('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+
 
         // Fitur Laporan
         // Route API untuk fungsionalitas AJAX di halaman laporan
         Route::get('/laporan/filters', [DataOrderController::class, 'getFilterOptions'])->name('laporan.filters');
         Route::post('/laporan/data', [DataOrderController::class, 'getData'])->name('laporan.data');
     });
-
 
     // --- GRUP ROUTE UNTUK KASIR ---
     Route::middleware('kasir')->prefix('kasir')->group(function () {
@@ -125,16 +126,20 @@ Route::middleware('auth')->group(function () {
     // Tambahkan route lain khusus pelanggan di sini
 });
 
+
+
 });
 Route::middleware(['auth', 'owner'])->prefix('owner')->name('owner.')->group(function () {
     
     Route::get('/dashboard', [OwnerDashboardController::class, 'index'])->name('dashboard');
     Route::get('/manage', [OwnerOrderController::class, 'index'])->name('manage');
     
-    // --- Profile ---
+    // --- Rute Khusus untuk Profil ---
+    // Rute ini untuk menampilkan halaman profil (GET request)
     Route::get('/profile', [OwnerProfileController::class, 'index'])->name('profile');
-    // PERBAIKAN DI SINI: Menambahkan route untuk update password
-    Route::patch('/profile/password', [OwnerProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+    
+    // Rute ini untuk memproses update data dari form (PATCH request)
+    Route::patch('/profile', [OwnerProfileController::class, 'update'])->name('profile.update');
 
     // --- Laporan ---
     Route::get('/laporan', [OwnerLaporanController::class, 'index'])->name('laporan.index');

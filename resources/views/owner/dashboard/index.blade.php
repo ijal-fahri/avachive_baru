@@ -48,24 +48,31 @@
 
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
-                <div class="flex items-center gap-4">
-                    <h1 class="text-xl font-semibold text-slate-800">Dashboard Owner</h1>
-                </div>
-                <div class="relative">
-                    <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all">
-                        {{ strtoupper(substr(Auth::user()->name ?? 'O', 0, 1)) }}
-                    </button>
-                    <div id="profileDropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl hidden z-10 border">
-                        <div class="p-2">
-                            <a href="{{ route('owner.profile') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md">Lihat Profile</a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">Logout</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-semibold text-slate-800">Dashboard Owner</h1>
+    </div>
+    <div class="relative">
+        {{-- GANTI BAGIAN INI --}}
+        <button id="profileDropdownBtn" class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all overflow-hidden">
+            @if(Auth::user()->profile_photo)
+                <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto" class="w-full h-full object-cover">
+            @else
+                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+            @endif
+        </button>
+        {{-- AKHIR BAGIAN PENGGANTIAN --}}
+        
+        <div id="profileDropdownMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl hidden z-10 border">
+            <div class="p-2">
+                <a href="{{ route('owner.profile') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md">Lihat Profile</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
 
             <main class="px-4 md:px-6 pb-28 md:pb-6 mt-8">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

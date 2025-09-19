@@ -1,67 +1,68 @@
 <?php
 
-namespace App\Http\Controllers\Owner;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
-class ProfileController extends Controller
+class AdminProfileController extends Controller
 {
     /**
-     * Menampilkan halaman profil owner.
+     * Menampilkan halaman profil admin.
      */
     public function index()
     {
-        // Cukup tampilkan view-nya
-        return view('owner.profile.index');
+        // Mengarahkan ke view baru di dalam folder admin/profile
+        return view('admin.profile.index');
     }
 
     /**
-     * Mengupdate data profil owner (nama, foto, dan password).
+     * Memperbarui data profil admin.
      */
     public function update(Request $request)
     {
         $user = Auth::user();
 
-        // 1. Validasi input sesuai kebutuhan
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255', 'unique:users,name,' . $user->id],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
+        
+        if ($validator->fails()) {
+            return redirect()->route('admin.profile.index')
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error_modal', 'edit');
+        }
 
-        // 2. Siapkan data untuk diupdate
-        $dataToUpdate = [
-            'name' => $request->name,
-        ];
+        $dataToUpdate = ['name' => $request->name];
 
-        // 3. Proses upload foto profil jika ada file baru
+        // Proses upload foto profil jika ada file baru
         if ($request->hasFile('profile_photo')) {
-            // Hapus foto lama jika ada
+            // Hapus foto lama jika ada, kecuali itu foto default
             if ($user->profile_photo) {
                 Storage::disk('public')->delete($user->profile_photo);
             }
             // Simpan foto baru dan dapatkan path-nya
             $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            // Menggunakan nama kolom 'profile_photo' sesuai migrasi Anda
             $dataToUpdate['profile_photo'] = $path;
         }
 
-        // 4. Proses update password jika diisi
+        // Update password jika diisi
         if ($request->filled('password')) {
             $dataToUpdate['password'] = Hash::make($request->password);
-            // Mengupdate kolom 'plain_password' sesuai migrasi Anda
             $dataToUpdate['plain_password'] = $request->password;
         }
 
-        // 5. Update data user di database
         $user->update($dataToUpdate);
 
-        // 6. Redirect kembali dengan pesan sukses
-        return redirect()->route('owner.profile')->with('success', 'Profil berhasil diperbarui!');
+        return redirect()->route('admin.profile.index')->with('success', 'Profil berhasil diperbarui!');
     }
 }

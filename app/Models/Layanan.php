@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Layanan extends Model
 {
-    // Tidak perlu 'use HasFactory;' jika tidak digunakan
-    
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -18,7 +19,16 @@ class Layanan extends Model
         'paket',
         'kategori',
         'harga',
-        'satuan',
-        'cabang_id', // <-- INI YANG DITAMBAHKAN
+        'diskon', // Ditambahkan agar fitur diskon berfungsi
+        'satuan', // Sesuai model yang Anda berikan
+        'cabang_id',
     ];
+
+    /**
+     * Relasi ke model Cabang.
+     */
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class);
+    }
 }

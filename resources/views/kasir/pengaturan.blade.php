@@ -97,17 +97,18 @@
                 <div class="relative">
                     {{-- Ganti bagian ini di header setiap halaman kasir --}}
                     {{-- ...existing code... --}}
+                    {{-- ...existing code... --}}
                     <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                         <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
                         @if (Auth::user()->profile_photo)
-                            <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
-                                alt="Foto Profil"
+                            <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
                                 class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
                         @else
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
                                 alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
                         @endif
                     </button>
+                    {{-- ...existing code... --}}
                     {{-- ...existing code... --}}
                     <div id="user-menu"
                         class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
@@ -137,8 +138,7 @@
                     </h3>
                     <div class="flex flex-col sm:flex-row items-center gap-6">
                         @if (Auth::user()->profile_photo)
-                            <img id="profilePhoto"
-                                src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
+                            <img id="profilePhoto" src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
                                 alt="Foto Profil"
                                 class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover cursor-pointer">
                         @else

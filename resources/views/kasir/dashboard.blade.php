@@ -96,7 +96,7 @@
     <!-- Sidebar End -->
 
     <!-- Main Content Start -->
-    <div class="ml-0 lg:ml-64 min-h-screen p-6">
+    <div class=" ml-0 lg:ml-64 min-h-screen p-6">
         <!-- Header -->
         <div
             class="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 justify-between items-center hidden md:flex">
@@ -110,16 +110,20 @@
             <div class="relative">
                 {{-- Ganti bagian ini di header setiap halaman kasir --}}
                 {{-- ...existing code... --}}
+                {{-- ...existing code... --}}
+                {{-- ...existing code... --}}
                 <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                     <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
                     @if (Auth::user()->profile_photo)
-                        <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
-                            alt="Foto Profil" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
+                            class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
                     @else
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
                             alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
                     @endif
                 </button>
+                {{-- ...existing code... --}}
+                {{-- ...existing code... --}}
                 {{-- ...existing code... --}}
                 <div id="user-menu"
                     class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50">
@@ -235,7 +239,7 @@
         </div>
     </div>
     <!-- Main Content End -->
-
+<div class="pb-20"></div>
     <!-- Pelanggan Modal -->
     <div id="pelangganModal"
         class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 bg-white/50 backdrop-blur-sm transition-opacity overflow-y-auto">

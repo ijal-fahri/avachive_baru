@@ -338,13 +338,12 @@
                 <h1 class="text-lg font-semibold text-slate-800">Daftar Pelanggan</h1>
             </div>
             <div class="relative">
-                {{-- Ganti bagian ini di header setiap halaman kasir --}}
                 {{-- ...existing code... --}}
                 <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">
                     <span class="font-semibold text-sm hidden sm:inline">{{ Auth::user()->name }}</span>
                     @if (Auth::user()->profile_photo)
-                        <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}"
-                            alt="Foto Profil" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
+                            class="w-8 h-8 rounded-full object-cover border-2 border-blue-400 shadow">
                     @else
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=64&bold=true"
                             alt="Avatar" class="w-8 h-8 rounded-full border-2 border-blue-400 shadow">
@@ -564,7 +563,7 @@
 
         </div>
     </div>
-
+<div class="pb-20"></div>
     <div id="pelangganModal"
         class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-content">

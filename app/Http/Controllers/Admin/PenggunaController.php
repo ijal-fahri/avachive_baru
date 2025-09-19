@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules;
 
@@ -17,14 +18,7 @@ class PenggunaController extends Controller
      */
     public function index()
     {
-        $cabangId = Auth::user()->cabang_id;
-        $users = User::where('cabang_id', $cabangId)
-                     ->whereIn('usertype', ['kasir', 'driver'])
-                     ->latest()
-                     ->get();
-                     
-        // Ganti nama view jika nama file Anda berbeda, misal: 'admin.karyawan.index'
-        return view('admin.pengguna.index', compact('users'));
+        return view('admin.pengguna.index');
     }
 
     /**
@@ -36,28 +30,47 @@ class PenggunaController extends Controller
             'name' => ['required', 'string', 'max:100', 'unique:users,name'],
             'password' => ['required', Rules\Password::defaults()],
             'usertype' => ['required', 'in:kasir,driver'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ]);
 
         if ($validator->fails()) {
             return redirect()->route('datauser')
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error_modal', 'tambah')
-                ->with('error_modal_title', 'Gagal Menambah Karyawan')
-                ->with('error_modal_action', route('pengguna.store'))
-                ->with('error_modal_method', 'POST');
+                ->with('error_modal', 'tambah');
         }
 
-        User::create([
+        $data = [
             'name' => $request->name,
             'usertype' => $request->usertype,
             'password' => Hash::make($request->password),
             'plain_password' => $request->password,
             'cabang_id' => Auth::user()->cabang_id,
-        ]);
+        ];
+
+        if ($request->hasFile('profile_photo')) {
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $data['profile_photo'] = $path;
+        }
+
+        User::create($data);
 
         return redirect()->route('datauser')->with('success', 'Karyawan berhasil ditambahkan.');
     }
+
+    /**
+     * Menampilkan data karyawan spesifik (untuk modal edit).
+     */
+    public function show(User $pengguna)
+    {
+        // Pastikan admin hanya bisa melihat karyawan di cabangnya sendiri
+        if ($pengguna->cabang_id != Auth::user()->cabang_id || !in_array($pengguna->usertype, ['kasir', 'driver'])) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        $pengguna->profile_photo_url = $pengguna->profile_photo ? asset('storage/' . $pengguna->profile_photo) : null;
+        return response()->json($pengguna);
+    }
+
 
     /**
      * Memperbarui data karyawan, memastikan hanya bisa di cabang admin.
@@ -72,6 +85,7 @@ class PenggunaController extends Controller
             'name' => ['required', 'string', 'max:100', 'unique:users,name,' . $pengguna->id],
             'usertype' => 'required|in:kasir,driver',
             'password' => ['nullable', Rules\Password::defaults()],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
         ]);
         
         if ($validator->fails()) {
@@ -79,9 +93,6 @@ class PenggunaController extends Controller
                 ->withErrors($validator)
                 ->withInput()
                 ->with('error_modal', 'edit')
-                ->with('error_modal_title', 'Gagal Mengedit Karyawan')
-                ->with('error_modal_action', route('pengguna.update', $pengguna->id))
-                ->with('error_modal_method', 'PUT')
                 ->with('error_id', $pengguna->id);
         }
 
@@ -93,6 +104,14 @@ class PenggunaController extends Controller
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
             $data['plain_password'] = $request->password;
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            if ($pengguna->profile_photo) {
+                Storage::disk('public')->delete($pengguna->profile_photo);
+            }
+            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            $data['profile_photo'] = $path;
         }
 
         $pengguna->update($data);
@@ -109,14 +128,13 @@ class PenggunaController extends Controller
             abort(403, 'AKSES DITOLAK');
         }
 
+        if ($pengguna->profile_photo) {
+            Storage::disk('public')->delete($pengguna->profile_photo);
+        }
+
         $pengguna->delete();
         return redirect()->route('datauser')->with('success', 'Karyawan berhasil dihapus.');
     }
-
-
-    // ====================================================================
-    // [BARU] METHOD UNTUK MELAYANI AJAX DATATABLES
-    // ====================================================================
 
     /**
      * Menyediakan data untuk DataTables dengan server-side processing.
@@ -125,39 +143,34 @@ class PenggunaController extends Controller
     {
         $cabangId = Auth::user()->cabang_id;
 
-        // Query dasar hanya untuk karyawan di cabang ini (bukan admin/owner)
         $query = User::where('cabang_id', $cabangId)
-                     ->whereIn('usertype', ['kasir', 'driver']);
+                       ->whereIn('usertype', ['kasir', 'driver']);
 
-        // Filter berdasarkan role (dari tab filter)
         if ($request->filled('role')) {
             $query->where('usertype', $request->role);
         }
 
-        // Filter berdasarkan pencarian DataTables
         if ($request->filled('search.value')) {
             $searchValue = $request->input('search.value');
             $query->where('name', 'like', '%' . $searchValue . '%');
         }
 
-        // Hitung total record sebelum paginasi
         $recordsFiltered = $query->count();
         
-        // Ambil data sesuai paginasi dari DataTables
         $users = $query->skip($request->start)
-                       ->take($request->length)
-                       ->latest() // Urutkan berdasarkan yang terbaru
-                       ->get();
+                        ->take($request->length)
+                        ->latest()
+                        ->get();
 
-        // Format data untuk respons JSON
         $data = [];
         foreach ($users as $key => $user) {
             $data[] = [
                 'no' => $request->start + $key + 1,
+                'profile_photo' => $user->profile_photo,
                 'name' => $user->name,
                 'usertype' => $user->usertype,
                 'plain_password' => $user->plain_password ?? 'Belum Diatur',
-                'id' => $user->id, // Kirim ID untuk tombol aksi
+                'id' => $user->id,
             ];
         }
         
