@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Akun Laundry Anda</title>
+    
 </head>
 <body>
     <h2>Halo, {{ $user->name }}</h2>
