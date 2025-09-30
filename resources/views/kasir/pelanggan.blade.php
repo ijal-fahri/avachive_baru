@@ -397,7 +397,6 @@
                     </button>
 
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <!-- Dropdown untuk memilih jumlah data per halaman -->
                         <div class="perpage-selector flex items-center">
                             <span class="perpage-label mr-2 text-sm text-gray-600">Tampilkan:</span>
                             <select name="perPage" id="perPage"
@@ -494,7 +493,6 @@
                 </tbody>
             </table>
 
-            <!-- Pagination Section -->
             <div class="pagination flex flex-col md:flex-row md:justify-between md:items-center gap-2 mt-4">
                 <div class="pagination-info text-sm text-gray-600 mb-2 md:mb-0">
                     Menampilkan <span class="font-medium">{{ $pelanggans->firstItem() }}</span>
@@ -680,6 +678,11 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     </div>
                     <div class="mb-4">
+                        <label for="edit_email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" name="email" id="edit_email"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div class="mb-4">
                         <label for="edit_provinsi"
                             class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
                         <select id="edit_provinsi" name="provinsi_id"
@@ -717,11 +720,6 @@
                         <input type="text" name="kodepos" id="edit_kodepos"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="email"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                    </div>
                     <div class="mb-6">
                         <label for="edit_detail_alamat" class="block text-sm font-medium text-gray-700 mb-1">Detail
                             Alamat</label>
@@ -739,7 +737,6 @@
         </div>
     </div>
 
-    <!-- Modal Detail Pelanggan -->
     <div id="detailPelangganModal"
         class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-content">
@@ -935,6 +932,12 @@
                         document.getElementById('edit_kodepos').value = data.kodepos;
                         document.getElementById('edit_detail_alamat').value = data
                             .detail_alamat;
+
+                        // Mengisi field email dari data relasi user
+                        if (data.user && data.user.email) {
+                            document.getElementById('edit_email').value = data.user.email;
+                        }
+
 
                         editHiddenInputs.provinsi.value = data.provinsi;
                         editHiddenInputs.kota.value = data.kota;

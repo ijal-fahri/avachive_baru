@@ -129,13 +129,23 @@ class KasirPelangganController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $pelanggan = TambahPelanggan::where('id', $id)
+        // 1. Ambil data pelanggan beserta relasi user-nya
+        $pelanggan = TambahPelanggan::with('user')
+            ->where('id', $id)
             ->where('cabang_id', Auth::user()->cabang_id)
             ->firstOrFail();
 
+        $user = $pelanggan->user;
+        if (!$user) {
+            return redirect()->route('pelanggan.index')->with('error', 'User terkait tidak ditemukan!');
+        }
+
+        // 2. Validasi data
         $validatedData = $request->validate([
             'nama' => 'required|max:255',
             'no_handphone' => 'required|max:20',
+            // Validasi email: unik, tapi abaikan email user saat ini
+            'email' => 'required|email|unique:users,email,' . $user->id,
             'provinsi' => 'required|string',
             'provinsi_id' => 'required|string',
             'kota' => 'required|string',
@@ -147,10 +157,20 @@ class KasirPelangganController extends Controller
             'kodepos' => 'required',
             'detail_alamat' => 'required',
         ]);
-        
-        $pelanggan->update($validatedData);
 
-        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diupdate!');
+        // 3. Gunakan transaction untuk memastikan konsistensi data
+        DB::transaction(function () use ($pelanggan, $user, $validatedData) {
+            // Update data di tabel 'tambah_pelanggans'
+            $pelanggan->update($validatedData);
+
+            // Update data di tabel 'users'
+            $user->update([
+                'name' => $validatedData['nama'],
+                'email' => $validatedData['email'],
+            ]);
+        });
+
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan & akun login berhasil diupdate!');
     }
 
    public function destroy(string $id)
