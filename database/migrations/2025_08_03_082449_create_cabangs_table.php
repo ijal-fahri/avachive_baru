@@ -16,6 +16,8 @@ return new class extends Migration
             $table->id();
             $table->string('nama_cabang');
             $table->text('alamat')->nullable();
+            // PENAMBAHAN: Kolom untuk nomor WhatsApp ditambahkan di sini
+            $table->string('no_whatsapp')->nullable();
             $table->timestamps();
         });
     }

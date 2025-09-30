@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\BuatOrder;
 use App\Models\TambahPelanggan;
+use Illuminate\Support\Facades\Auth; // pastikan sudah di-import
 
 class KasirDataOrderController extends Controller
 {
@@ -14,28 +15,27 @@ class KasirDataOrderController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil nilai perPage dari request, jika tidak ada gunakan nilai dari session atau default 10
+        $cabangId = Auth::user()->cabang_id;
+
+        // Query utama: filter cabang dan relasi pelanggan
+        $query = BuatOrder::with('pelanggan')->where('cabang_id', $cabangId);
+
         $perPage = $request->get('perPage', session('perPage', 10));
-        
-        // Simpan pilihan perPage ke session
         if ($request->has('perPage')) {
             session(['perPage' => $request->get('perPage')]);
         }
-        
-        $query = BuatOrder::with('pelanggan');
 
-        // Logika untuk fitur pencarian
+        // Fitur pencarian
         if ($request->has('search') && $request->search != '') {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                // Cari berdasarkan nama pelanggan
                 $q->whereHas('pelanggan', function ($q2) use ($searchTerm) {
                     $q2->where('nama', 'like', '%' . $searchTerm . '%');
-                })->orWhere('id', 'like', '%' . $searchTerm . '%'); // Atau cari berdasarkan ID order
+                })->orWhere('id', 'like', '%' . $searchTerm . '%');
             });
         }
 
-        // Logika untuk fitur filter status
+        // Fitur filter status
         if ($request->has('status') && $request->status != 'Semua') {
             $query->where('status', $request->status);
         }
@@ -43,12 +43,11 @@ class KasirDataOrderController extends Controller
         // Pisahkan order yang belum selesai dan yang sudah selesai
         if ($perPage === 'all') {
             $orders = $query->where('status', '!=', 'Selesai')->orderBy('created_at', 'desc')->get();
-            // Convert to LengthAwarePaginator dengan jumlah item sangat besar
             $orders = new \Illuminate\Pagination\LengthAwarePaginator(
                 $orders,
                 $orders->count(),
-                1000000, // items per page sangat besar
-                1, // current page
+                1000000,
+                1,
                 [
                     'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
                     'pageName' => 'page'
@@ -57,8 +56,13 @@ class KasirDataOrderController extends Controller
         } else {
             $orders = $query->where('status', '!=', 'Selesai')->orderBy('created_at', 'desc')->paginate($perPage);
         }
-        
-        $historyOrders = BuatOrder::with('pelanggan')->where('status', 'Selesai')->orderBy('created_at', 'desc')->get();
+
+        // History order juga harus difilter cabang!
+        $historyOrders = BuatOrder::with('pelanggan')
+            ->where('cabang_id', $cabangId)
+            ->where('status', 'Selesai')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('kasir.data_order', compact('orders', 'historyOrders', 'perPage'));
     }

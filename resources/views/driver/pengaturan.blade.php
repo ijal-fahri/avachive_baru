@@ -18,29 +18,22 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* Custom styles untuk Poppins font & scrollbar */
         body {
             font-family: 'Poppins', sans-serif;
         }
-
-        /* Simple Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 10px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-
         .modal-content {
             transition: all 0.3s ease-in-out;
         }
@@ -51,25 +44,12 @@
 
     <div class="flex h-screen overflow-hidden bg-slate-100">
 
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col hidden md:flex">
-            <div class="mb-8 text-center">
-                <div class="flex flex-col items-center justify-center py-8">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-20 w-auto mb-4">
-                    <h2 class="text-2xl font-bold text-teal-400">Avachive Driver</h2>
-                </div>
-                <nav class="flex flex-col space-y-2">
-                    <a href="/driver/dashboard"
-                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                        <i class="bi bi-box-seam"></i> Pengiriman
-                    </a>
-                    <a href="/driver/riwayat"
-                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                        <i class="bi bi-clock-history"></i> Riwayat
-                    </a>
-                </nav>
-        </aside>
+        {{-- ===== [ PERUBAHAN DI SINI ] ===== --}}
+        {{-- Memanggil sidebar terpusat (yang sudah berisi navigasi desktop & mobile) --}}
+        @include('driver.partials.sidebar')
+        {{-- ===== [ AKHIR PERUBAHAN ] ===== --}}
 
-        <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main class="flex-1 p-4 sm:p-6 overflow-y-auto md:ml-64 pb-24 md:pb-6">
             <div
                 class="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -80,7 +60,6 @@
                     </div>
                 </div>
                 <div class="relative">
-                    {{-- ...existing code... --}}
                     <button id="profileDropdownBtn"
                         class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:ring-2 hover:ring-blue-400 transition-all">
                         @if (Auth::user()->profile_photo)
@@ -91,7 +70,6 @@
                                 alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-400 shadow">
                         @endif
                     </button>
-                    {{-- ...existing code... --}}
                     <div id="profileDropdownMenu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-20 border border-slate-200">
                         <div class="p-2">
@@ -104,32 +82,41 @@
                     </div>
                 </div>
             </div>
+             
+            <div class="pb-20 pt-20 lg:pt-6 max-w-4xl mx-auto space-y-8 mt-4">
+            <section class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="bi bi-person-circle text-teal-500"></i> Profil Anda</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-6">
+                                <img src="{{ Auth::user()->profile_photo ? asset('storage/' . Auth::user()->profile_photo) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=14b8a6&color=fff&size=128&bold=true' }}" alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover">
+                                <div class="text-center sm:text-left flex-1">
+                                    <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
+                                    <p class="text-slate-500 mt-1">Role: {{ ucfirst(Auth::user()->usertype) }}</p>
+                                    
+                                    {{-- [PERUBAHAN] Menambahkan info cabang yang lebih modern --}}
+                                    @if(Auth::user()->cabang)
+                                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-left">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-shop-window w-6 text-center text-teal-500"></i>
+                                                <span><strong class="font-semibold">Cabang:</strong> {{ Auth::user()->cabang->nama_cabang }}</span>
+                                            </div>
+                                            @if(Auth::user()->cabang->no_whatsapp)
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-whatsapp w-6 text-center text-teal-500"></i>
+                                                {{-- [PERUBAHAN] Menambahkan label "Nomor Cabang:" --}}
+                                                <span><strong class="font-semibold">Nomor Cabang:</strong> {{ Auth::user()->cabang->no_whatsapp }}</span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endif
 
-            <section class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800 mb-4">
-                    <i class="bi bi-person-circle text-teal-500"></i>
-                    Profil Driver
-                </h3>
-                <div class="flex flex-col items-center text-center md:flex-row md:text-left gap-6">
-                    @if ($user->profile_photo)
-                        <img id="profilePhoto" src="{{ asset('storage/' . $user->profile_photo) }}" alt="Foto Profil"
-                            class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover cursor-pointer">
-                    @else
-                        <img id="profilePhoto"
-                            src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=3498db&color=fff&size=128&bold=true"
-                            alt="Foto Profil"
-                            class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md cursor-pointer">
-                    @endif
-                    <div class="profile-info">
-                        <h4 class="text-2xl font-bold text-slate-900">{{ $user->name }}</h4>
-                        <p class="text-slate-500 mt-1">Role: {{ $user->usertype }}</p>
-                        <button id="openProfileModalBtn"
-                            class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                            <i class="bi bi-pencil-square mr-2"></i>Edit Profil
-                        </button>
-                    </div>
-                </div>
-            </section>
+                                    <button id="openProfileModalBtn" class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                        <i class="bi bi-pencil-square mr-2"></i>Edit Profil
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
             <section class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <h3 class="flex items-center gap-3 text-xl font-semibold text-slate-800 mb-4">
@@ -163,26 +150,15 @@
                     </ol>
                 </div>
             </section>
+            </div>
 
             <footer class="text-center py-6 text-sm text-slate-500">
                 © 2025 Avachive Driver. All rights reserved.
             </footer>
         </main>
+        
+        {{-- Navigasi mobile yang lama sudah dihapus dari sini --}}
 
-        {{-- Navigasi mobile disesuaikan agar konsisten --}}
-        <nav
-            class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-            <a href="/driver/dashboard"
-                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-                <i class="bi bi-box-seam text-2xl"></i>
-                <span class="text-xs">Pengiriman</span>
-            </a>
-            <a href="/driver/riwayat"
-                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-                <i class="bi bi-clock-history text-2xl"></i>
-                <span class="text-xs">Riwayat</span>
-            </a>
-        </nav>
     </div>
 
     {{-- MODAL EDIT PROFIL --}}
@@ -341,12 +317,10 @@
             const photoPreviewModal = el('#photoPreviewModal');
             const closePhotoPreviewBtn = el('#closePhotoPreviewBtn');
 
-            // Function to open the photo preview modal
             window.openPhotoPreview = () => {
                 photoPreviewModal.classList.remove('hidden');
             };
 
-            // Function to close the photo preview modal
             const closePhotoPreviewModal = () => {
                 photoPreviewModal.classList.add('hidden');
             };
@@ -355,23 +329,12 @@
             photoPreviewModal.addEventListener('click', (e) => {
                 if (e.target === photoPreviewModal) closePhotoPreviewModal();
             });
-        });
 
-        // ...existing code...
-        const profilePhoto = document.getElementById('profilePhoto');
-        const photoPreviewModal = document.getElementById('photoPreviewModal');
-        const closePhotoPreviewBtn = document.getElementById('closePhotoPreviewBtn');
-
-        profilePhoto.addEventListener('click', () => {
-            photoPreviewModal.classList.remove('hidden');
+            const profilePhoto = document.getElementById('profilePhoto');
+            profilePhoto.addEventListener('click', () => {
+                photoPreviewModal.classList.remove('hidden');
+            });
         });
-        closePhotoPreviewBtn.addEventListener('click', () => {
-            photoPreviewModal.classList.add('hidden');
-        });
-        photoPreviewModal.addEventListener('click', (e) => {
-            if (e.target === photoPreviewModal) photoPreviewModal.classList.add('hidden');
-        });
-        // ...existing code...
     </script>
 
 </body>

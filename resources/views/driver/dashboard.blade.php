@@ -14,47 +14,35 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Custom styles untuk Poppins font & scrollbar */
         body {
             font-family: 'Poppins', sans-serif;
         }
-
-        /* Simple Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 10px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-
-        /* Animasi untuk modal */
         @keyframes scale-up {
             from {
                 transform: scale(0.95);
                 opacity: 0;
             }
-
             to {
                 transform: scale(1);
                 opacity: 1;
             }
         }
-
         .animate-scale-up {
             animation: scale-up 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-
-        /* Style untuk tab aktif */
         .tab.active {
             background-color: #3b82f6 !important;
             color: white !important;
@@ -65,348 +53,308 @@
 
 <body class="bg-slate-100 text-slate-800 antialiased">
 
-    <div class="flex h-screen overflow-hidden bg-slate-100">
+    <div class="flex min-h-screen bg-slate-100">
 
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col hidden md:flex">
-            <div class="mb-8 text-center">
-                <div class="flex flex-col items-center justify-center py-8">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-20 w-auto mb-4">
-                    <h2 class="text-2xl font-bold text-teal-400">Avachive Driver</h2>
-                </div>
-                <nav class="flex flex-col space-y-2">
-                    <a href="/driver/dashboard"
-                        class="active flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors">
-                        <i class="bi bi-box-seam"></i> Pengiriman
-                    </a>
-                    <a href="/driver/riwayat"
-                        class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                        <i class="bi bi-clock-history"></i> Riwayat
-                    </a>
-                </nav>
-        </aside>
+        @include('driver.partials.sidebar')
 
-        <main class="flex-1 p-4 sm:p-6 overflow-y-auto" id="main-content">
-            <div
-                class="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border border-slate-200/60 p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">🚚</span>
-                    <div>
-                        <h1 class="font-semibold text-slate-800 hidden sm:block">Dashboard Driver Laundry</h1>
-                        <p class="text-xs text-slate-500">Cabang Ciomas</p>
+        <div class="flex flex-1 flex-col md:ml-64">
+            <main class="flex-1 p-4 sm:p-6 pb-24 md:pb-6" id="main-content">
+                <div
+                    class="sticky top-0 z-10 mb-6 flex items-center justify-between rounded-xl border border-slate-200/60 bg-white/80 p-4 shadow-lg backdrop-blur-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🚚</span>
+                        <div>
+                            <h1 class="hidden font-semibold text-slate-800 sm:block">Dashboard Driver Laundry</h1>
+                            <p class="text-xs text-slate-500">Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Tidak diketahui' }}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="relative">
-                    {{-- ...existing code... --}}
-                    <button id="profileDropdownBtn"
-                        class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:ring-2 hover:ring-blue-400 transition-all">
-                        @if (Auth::user()->profile_photo)
-                            <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
-                                class="w-10 h-10 rounded-full object-cover border-2 border-blue-400 shadow">
-                        @else
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=64&bold=true"
-                                alt="Avatar" class="w-10 h-10 rounded-full border-2 border-blue-400 shadow">
-                        @endif
-                    </button>
-                    {{-- ...existing code... --}}
-                    <div id="profileDropdownMenu"
-                        class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-20 border border-slate-200">
-                        <div class="p-2">
-                            <a href="/driver/pengaturan"
-                                class="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-md">Lihat
-                                Profile</a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-                                @csrf
-                            </form>
-
-                            <button id="logoutBtn"
-                                class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
-                                Logout
-                            </button>
-
+                    <div class="relative">
+                        <button id="profileDropdownBtn"
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-all hover:ring-2 hover:ring-blue-400">
+                            @if (Auth::user()->profile_photo)
+                                <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
+                                    class="h-10 w-10 rounded-full border-2 border-blue-400 object-cover shadow">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3498db&color=fff&size=64&bold=true"
+                                    alt="Avatar" class="h-10 w-10 rounded-full border-2 border-blue-400 shadow">
+                            @endif
+                        </button>
+                        <div id="profileDropdownMenu"
+                            class="absolute right-0 z-20 mt-2 hidden w-48 rounded-lg border border-slate-200 bg-white shadow-xl">
+                            <div class="p-2">
+                                <a href="/driver/pengaturan"
+                                    class="block w-full rounded-md px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Lihat
+                                    Profile</a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                                    @csrf
+                                </form>
+                                <button id="logoutBtn"
+                                    class="block w-full rounded-md px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+                                    Logout
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <section class="mb-6">
-                <h3 class="text-xl font-semibold text-blue-600 mb-4" id="todayBadge">Ringkasan Hari Ini</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <div
-                        class="bg-white p-5 rounded-xl shadow-lg transition hover:-translate-y-1 relative overflow-hidden">
-                        <div class="absolute -right-4 -bottom-4 text-blue-100 pointer-events-none">
-                            <svg class="w-24 h-24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L8 2.122l3.75 1.339 2.404-.961L8.186 1.113zM14 4.267l-5.5 2.489L3 4.267V11.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V4.267zM7.5 14.762V12h1v2.762a.5.5 0 0 0 .814.39l3.5-2a.5.5 0 0 0 0-.868l-3.5-2a.5.5 0 0 0-.814.39V12h-1v-2.762a.5.5 0 0 0-.814-.39l-3.5 2a.5.5 0 0 0 0 .868l3.5 2A.5.5 0 0 0 7.5 14.762z" />
-                            </svg>
+                <section class="mb-6">
+                    <h3 class="mb-4 text-xl font-semibold text-blue-600" id="todayBadge">Ringkasan Hari Ini</h3>
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="relative overflow-hidden rounded-xl bg-white p-5 shadow-lg transition hover:-translate-y-1">
+                            <div class="pointer-events-none absolute -bottom-3 -right-3 z-0 text-blue-100">
+                               <i class="bi bi-box-seam text-7xl"></i>
+                            </div>
+                            <div class="relative z-10">
+                                <h4 class="font-medium text-slate-500">Total Pengiriman</h4>
+                                <p id="countTotal" class="mt-1 text-4xl font-bold text-slate-800">{{ $countTotal }}</p>
+                            </div>
                         </div>
-                        <h4 class="font-medium text-slate-500">Total Pengiriman</h4>
-                        <p id="countTotal" class="text-4xl font-bold mt-1 text-slate-800">{{ $countTotal }}</p>
-                    </div>
-                    <div
-                        class="bg-white p-5 rounded-xl shadow-lg transition hover:-translate-y-1 relative overflow-hidden">
-                        <div class="absolute -right-4 -bottom-4 text-orange-100 pointer-events-none">
-                            <svg class="w-24 h-24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M8.5 5.5a.5.5 0 0 0-1 0v3.352l-1.558.52a.5.5 0 0 0-.253.918l2 1a.5.5 0 0 0 .498 0l2-1a.5.5 0 0 0-.253-.918l-1.558-.52V5.5z" />
-                                <path
-                                    d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1H7a.5.5 0 0 1-.5-.5zM8 16a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-1a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" />
-                            </svg>
+                        <div class="relative overflow-hidden rounded-xl bg-white p-5 shadow-lg transition hover:-translate-y-1">
+                            <div class="pointer-events-none absolute -bottom-3 -right-3 z-0 text-orange-100">
+                                <i class="bi bi-hourglass-split text-7xl"></i>
+                            </div>
+                            <div class="relative z-10">
+                                <h4 class="font-medium text-slate-500">Belum Diantar</h4>
+                                <p id="countBelum" class="mt-1 text-4xl font-bold text-slate-800">{{ $countBelum }}</p>
+                            </div>
                         </div>
-                        <h4 class="font-medium text-slate-500">Belum Diantar</h4>
-                        <p id="countBelum" class="text-4xl font-bold mt-1 text-slate-800">{{ $countBelum }}</p>
-                    </div>
-                    <div
-                        class="bg-white p-5 rounded-xl shadow-lg transition hover:-translate-y-1 relative overflow-hidden">
-                        <div class="absolute -right-4 -bottom-4 text-green-100 pointer-events-none">
-                            <svg class="w-24 h-24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z" />
-                                <path
-                                    d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z" />
-                            </svg>
+                        <div class="relative overflow-hidden rounded-xl bg-white p-5 shadow-lg transition hover:-translate-y-1">
+                            <div class="pointer-events-none absolute -bottom-3 -right-3 z-0 text-green-100">
+                               <i class="bi bi-check2-circle text-7xl"></i>
+                            </div>
+                            <div class="relative z-10">
+                               <h4 class="font-medium text-slate-500">Sudah Diantar</h4>
+                               <p id="countSudah" class="mt-1 text-4xl font-bold text-slate-800">{{ $countSudah }}</p>
+                            </div>
                         </div>
-                        <h4 class="font-medium text-slate-500">Sudah Diantar</h4>
-                        <p id="countSudah" class="text-4xl font-bold mt-1 text-slate-800">{{ $countSudah }}</p>
-                    </div>
-                    <div
-                        class="bg-white p-5 rounded-xl shadow-lg transition hover:-translate-y-1 relative overflow-hidden">
-                        <div class="absolute -right-4 -bottom-4 text-slate-100 pointer-events-none">
-                            <svg class="w-24 h-24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M8 1.114v2.758c0 .566-.464 1.03-1.03 1.03H4.142c-.566 0-1.03-.464-1.03-1.03V1.114H8zm-1.03 1.03a.25.25 0 0 1 .499 0l.206 1.03a.25.25 0 0 1-.199.287l-1.03.206a.25.25 0 0 1-.287-.199l-1.03-.206a.25.25 0 0 1 .199-.287l1.03-.206zM13.858 4.142c.566 0 1.03.464 1.03 1.03v5.656c0 .566-.464 1.03-1.03-1.03H2.142c-.566 0-1.03-.464-1.03-1.03V5.172c0-.566.464-1.03 1.03-1.03h2.758v2.758c0 .566.464 1.03 1.03 1.03h2.144c.566 0 1.03-.464 1.03-1.03V4.142h2.758z" />
-                            </svg>
+                        <div class="relative overflow-hidden rounded-xl bg-white p-5 shadow-lg transition hover:-translate-y-1">
+                            <div class="pointer-events-none absolute -bottom-3 -right-3 z-0 text-slate-100">
+                                <i class="bi bi-percent text-7xl"></i>
+                            </div>
+                            <div class="relative z-10">
+                                <h4 class="font-medium text-slate-500">Presentase Selesai</h4>
+                                <p id="countPercent" class="mt-1 text-4xl font-bold text-slate-700">{{ $countPercent }}%</p>
+                            </div>
                         </div>
-                        <h4 class="font-medium text-slate-500">Presentase Selesai</h4>
-                        <p id="countPercent" class="text-4xl font-bold mt-1 text-slate-700">{{ $countPercent }}%</p>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="bg-white rounded-2xl shadow-lg p-5">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5">
-                    <div id="statusTabs" class="flex flex-wrap items-center gap-2">
-                        <button id="filterSemua"
-                            class="tab active flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-blue-600 text-white transition-colors"
-                            data-status="ALL"><i class="bi bi-ui-checks-grid"></i> Semua</button>
-                        <button id="filterBelum"
-                            class="tab flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                            data-status="belum diantar"><i class="bi bi-hourglass-split"></i> Belum</button>
-                        <button id="filterSudah"
-                            class="tab flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                            data-status="selesai"><i class="bi bi-check2-circle"></i> Sudah</button>
+                <section class="rounded-2xl bg-white p-5 shadow-lg">
+                    <div class="mb-5 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+                        <div id="statusTabs" class="flex flex-wrap items-center gap-2">
+                            <button id="filterSemua"
+                                class="tab active flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors"
+                                data-status="ALL"><i class="bi bi-ui-checks-grid"></i> Semua</button>
+                            <button id="filterBelum"
+                                class="tab flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-200"
+                                data-status="belum diantar"><i class="bi bi-hourglass-split"></i> Belum</button>
+                            <button id="filterSudah"
+                                class="tab flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-200"
+                                data-status="selesai"><i class="bi bi-check2-circle"></i> Sudah</button>
+                        </div>
+                        <div class="flex w-full items-center gap-2 md:w-auto">
+                            <input type="text" id="searchInput" placeholder="Cari nama, alamat, pembayaran..."
+                                class="w-full rounded-full border border-slate-300 px-4 py-2 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400 md:w-64" />
+                            <button id="resetBtn"
+                                class="rounded-full bg-slate-200 px-3 py-2 text-slate-700 transition-transform active:scale-95 hover:bg-slate-300"><i
+                                    class="bi bi-arrow-counterclockwise"></i></button>
+                        </div>
                     </div>
-                    <div class="flex w-full md:w-auto items-center gap-2">
-                        <input type="text" id="searchInput" placeholder="Cari nama, alamat, pembayaran..."
-                            class="w-full md:w-64 px-4 py-2 text-sm border border-slate-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition" />
-                        <button id="resetBtn"
-                            class="px-3 py-2 bg-slate-200 text-slate-700 rounded-full hover:bg-slate-300 transition-transform active:scale-95"><i
-                                class="bi bi-arrow-counterclockwise"></i></button>
-                    </div>
-                </div>
 
-                <div class="overflow-x-auto">
-                    <table id="shipTable" class="w-full text-sm">
-                        <thead class="hidden md:table-header-group">
-                            <tr class="bg-slate-200">
-                                <th class="p-3 text-left font-semibold text-slate-600 rounded-l-lg">No.</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Nama</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Alamat</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Detail Pembayaran</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Tanggal Kirim</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Tanggal Selesai</th>
-                                <th class="p-3 text-left font-semibold text-slate-600">Status</th>
-                                <th class="p-3 text-left font-semibold text-slate-600 rounded-r-lg">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody">
-                            <tr id="no-results-row" class="hidden">
-                                <td colspan="8" class="text-center text-slate-500 py-10">
-                                    <div class="flex flex-col items-center gap-2">
-                                        <svg class="w-16 h-16 text-slate-400" id="no-results-icon"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <p class="font-semibold text-slate-700" id="no-results-title"></p>
-                                        <p class="text-sm" id="no-results-subtitle"></p>
-                                    </div>
-                                </td>
-                            </tr>
-                            @forelse($orders as $i => $order)
-                                @php
-                                    $pelanggan = $order->pelanggan;
-                                    $layanan = json_decode($order->layanan, true) ?? [];
-
-                                    if (json_last_error() !== JSON_ERROR_NONE) {
-                                        $fixedLayanan = str_replace("'", '"', $order->layanan);
-                                        $layanan = json_decode($fixedLayanan, true) ?? [];
-                                    }
-
-                                    $layananJson = '';
-                                    if (is_array($layanan) && count($layanan) > 0) {
-                                        if (isset($layanan[0]) && is_array($layanan[0])) {
-                                            $layananJson = collect($layanan)
-                                                ->map(function ($item) {
-                                                    $harga = $item['harga'] ?? ($item['Harga'] ?? 0);
-                                                    $kuantitas = $item['kuantitas'] ?? ($item['Kuantitas'] ?? 0);
-                                                    return [
-                                                        'nama' => $item['nama'] ?? ($item['Nama'] ?? 'N/A'),
-                                                        'harga' => (float) $harga,
-                                                        'kuantitas' => (int) $kuantitas,
-                                                        'subtotal' => (float) $harga * (int) $kuantitas,
-                                                    ];
-                                                })
-                                                ->toJson();
-                                        } else {
-                                            $harga = $layanan['harga'] ?? ($layanan['Harga'] ?? 0);
-                                            $kuantitas = $layanan['kuantitas'] ?? ($layanan['Kuantitas'] ?? 0);
-                                            $layananJson = json_encode([
-                                                [
-                                                    'nama' => $layanan['nama'] ?? ($layanan['Nama'] ?? 'N/A'),
-                                                    'harga' => (float) $harga,
-                                                    'kuantitas' => (int) $kuantitas,
-                                                    'subtotal' => (float) $harga * (int) $kuantitas,
-                                                ],
-                                            ]);
-                                        }
-                                    } else {
-                                        $layananJson = '[]';
-                                    }
-
-                                    $isLunas =
-                                        ($order->sisa_harga ?? 0) == 0 || $order->waktu_pembayaran === 'Bayar Sekarang';
-                                    $statusClass =
-                                        strtolower($order->status) === 'selesai' ? 'selesai' : 'belum diantar';
-                                    $waktuSelesai =
-                                        $order->status === 'Selesai'
-                                            ? $order->updated_at->toIso8601String()
-                                            : 'Belum Selesai';
-                                @endphp
-                                <tr data-status="{{ $statusClass }}"
-                                    class="block mb-4 p-4 bg-white rounded-lg shadow-md md:table-row md:mb-0 md:shadow-none md:p-0 md:border-b md:border-slate-200 md:even:bg-slate-50">
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">No: </span>{{ $i + 1 }}</td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Nama: </span>{{ $pelanggan->nama ?? '-' }}
-                                    </td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Alamat:
-                                        </span>{{ $pelanggan->detail_alamat ?? '-' }}</td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Pembayaran: </span>
-                                        @if ($isLunas)
-                                            <span
-                                                class="text-xs font-semibold inline-block py-1 px-3 rounded-full text-green-700 bg-green-100">Lunas</span>
-                                        @else
-                                            <span
-                                                class="text-xs font-semibold inline-block py-1 px-3 rounded-full text-red-700 bg-red-100">
-                                                Belum Lunas - Rp {{ number_format($order->sisa_harga, 0, ',', '.') }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Tgl Kirim:
-                                        </span>{{ \Carbon\Carbon::parse($order->created_at)->translatedFormat('d F Y') }}
-                                    </td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Tgl Selesai:
-                                        </span>{{ $order->status === 'Selesai' ? \Carbon\Carbon::parse($order->updated_at)->translatedFormat('d F Y') : 'Belum Selesai' }}
-                                    </td>
-                                    <td class="block py-1 md:table-cell md:p-3"><span
-                                            class="font-semibold md:hidden">Status: </span>
-                                        @if ($order->status === 'Selesai')
-                                            <span
-                                                class="badge badge-done text-xs font-semibold inline-block py-1 px-3 rounded-full text-green-700 bg-green-200">Sudah
-                                                Diantar</span>
-                                        @else
-                                            <span
-                                                class="badge badge-pending text-xs font-semibold inline-block py-1 px-3 rounded-full text-orange-600 bg-orange-200">Belum
-                                                Diantar</span>
-                                        @endif
-                                    </td>
-                                    <td class="block py-2 md:table-cell md:p-3">
-                                        <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
-                                            <button
-                                                class="btn-detail text-sm px-3 py-2 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition active:scale-95"
-                                                data-nama="{{ $pelanggan->nama ?? '-' }}"
-                                                data-hp="{{ $pelanggan->no_handphone ?? '-' }}"
-                                                data-alamat="{{ $pelanggan->detail_alamat ?? '-' }}"
-                                                data-metode-pengiriman="{{ $order->metode_pengambilan }}"
-                                                data-metode-pembayaran="{{ $order->metode_pembayaran }}"
-                                                data-status-pembayaran="{{ $isLunas ? 'Lunas' : 'Belum Lunas' }}"
-                                                data-nominal-pembayaran="{{ $order->sisa_harga ?? 0 }}"
-                                                data-waktu-order="{{ $order->created_at->toIso8601String() }}"
-                                                data-waktu-selesai="{{ $waktuSelesai }}"
-                                                data-total="Rp {{ number_format($order->total_harga, 0, ',', '.') }}"
-                                                data-layanan="{{ $layananJson }}">
-                                                <i class="bi bi-eye mr-1"></i> Detail
-                                            </button>
-
-                                            @if ($order->status !== 'Selesai')
-                                                @if (!$isLunas)
-                                                    <button
-                                                        class="btn-lunaskan text-sm px-3 py-2 rounded-md bg-amber-500 text-white font-semibold shadow hover:bg-amber-600 transition active:scale-95"
-                                                        data-id="{{ $order->id }}">
-                                                        <i class="bi bi-cash-coin mr-1"></i> Lunaskan
-                                                    </button>
-                                                @endif
-                                                <button
-                                                    class="btn-selesai text-sm px-3 py-2 rounded-md bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition active:scale-95"
-                                                    data-id="{{ $order->id }}"
-                                                    data-lunas="{{ $isLunas ? 'true' : 'false' }}">
-                                                    <i class="bi bi-check-circle mr-1"></i> Selesai
-                                                </button>
-                                            @endif
+                    <div class="overflow-x-auto">
+                        <table id="shipTable" class="w-full text-sm">
+                            <thead class="hidden md:table-header-group">
+                                <tr class="bg-slate-200">
+                                    <th class="rounded-l-lg p-3 text-left font-semibold text-slate-600">No.</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Nama</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Alamat</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Detail Pembayaran</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Tanggal Kirim</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Tanggal Selesai</th>
+                                    <th class="p-3 text-left font-semibold text-slate-600">Status</th>
+                                    <th class="rounded-r-lg p-3 text-left font-semibold text-slate-600">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody">
+                                <tr id="no-results-row" class="hidden">
+                                    <td colspan="8" class="py-10 text-center text-slate-500">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <svg class="h-16 w-16 text-slate-400" id="no-results-icon"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p class="font-semibold text-slate-700" id="no-results-title"></p>
+                                            <p class="text-sm" id="no-results-subtitle"></p>
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                                @forelse($orders as $i => $order)
+                                    @php
+                                        $pelanggan = $order->pelanggan;
+                                        $layanan = json_decode($order->layanan, true) ?? [];
 
-            <footer class="text-center py-6 text-sm text-slate-500">
+                                        if (json_last_error() !== JSON_ERROR_NONE) {
+                                            $fixedLayanan = str_replace("'", '"', $order->layanan);
+                                            $layanan = json_decode($fixedLayanan, true) ?? [];
+                                        }
+
+                                        $layananJson = '';
+                                        if (is_array($layanan) && count($layanan) > 0) {
+                                            if (isset($layanan[0]) && is_array($layanan[0])) {
+                                                $layananJson = collect($layanan)
+                                                    ->map(function ($item) {
+                                                        $harga = $item['harga'] ?? ($item['Harga'] ?? 0);
+                                                        $kuantitas = $item['kuantitas'] ?? ($item['Kuantitas'] ?? 0);
+                                                        return [
+                                                            'nama' => $item['nama'] ?? ($item['Nama'] ?? 'N/A'),
+                                                            'harga' => (float) $harga,
+                                                            'kuantitas' => (int) $kuantitas,
+                                                            'subtotal' => (float) $harga * (int) $kuantitas,
+                                                        ];
+                                                    })
+                                                    ->toJson();
+                                            } else {
+                                                $harga = $layanan['harga'] ?? ($layanan['Harga'] ?? 0);
+                                                $kuantitas = $layanan['kuantitas'] ?? ($layanan['Kuantitas'] ?? 0);
+                                                $layananJson = json_encode([
+                                                    [
+                                                        'nama' => $layanan['nama'] ?? ($layanan['Nama'] ?? 'N/A'),
+                                                        'harga' => (float) $harga,
+                                                        'kuantitas' => (int) $kuantitas,
+                                                        'subtotal' => (float) $harga * (int) $kuantitas,
+                                                    ],
+                                                ]);
+                                            }
+                                        } else {
+                                            $layananJson = '[]';
+                                        }
+
+                                        $isLunas =
+                                            ($order->sisa_harga ?? 0) == 0 || $order->waktu_pembayaran === 'Bayar Sekarang';
+                                        $statusClass =
+                                            strtolower($order->status) === 'selesai' ? 'selesai' : 'belum diantar';
+                                        $waktuSelesai =
+                                            $order->status === 'Selesai'
+                                                ? $order->updated_at->toIso8601String()
+                                                : 'Belum Selesai';
+                                    @endphp
+                                    <tr data-status="{{ $statusClass }}"
+                                        class="mb-4 block rounded-lg bg-white p-4 shadow-md md:table-row md:mb-0 md:border-b md:border-slate-200 md:p-0 md:shadow-none md:even:bg-slate-50">
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">No: </span>{{ $i + 1 }}</td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Nama: </span>
+                                            {{-- [PERUBAHAN] Logika badge "BARU" ditambahkan di sini --}}
+                                            <div class="flex items-center">
+                                                <span>{{ $pelanggan->nama ?? '-' }}</span>
+                                                @if (isset($order->is_new) && $order->is_new)
+                                                    <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-teal-500 rounded-full animate-pulse">BARU</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Alamat:
+                                            </span>{{ $pelanggan->detail_alamat ?? '-' }}</td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Pembayaran: </span>
+                                            @if ($isLunas)
+                                                <span
+                                                    class="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Lunas</span>
+                                            @else
+                                                <span
+                                                    class="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                                                    Belum Lunas - Rp {{ number_format($order->sisa_harga, 0, ',', '.') }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Tgl Kirim:
+                                            </span>{{ \Carbon\Carbon::parse($order->created_at)->translatedFormat('d F Y') }}
+                                        </td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Tgl Selesai:
+                                            </span>{{ $order->status === 'Selesai' ? \Carbon\Carbon::parse($order->updated_at)->translatedFormat('d F Y') : 'Belum Selesai' }}
+                                        </td>
+                                        <td class="block py-1 md:table-cell md:p-3"><span
+                                                class="font-semibold md:hidden">Status: </span>
+                                            @if ($order->status === 'Selesai')
+                                                <span
+                                                    class="badge badge-done inline-block rounded-full bg-green-200 px-3 py-1 text-xs font-semibold text-green-700">Sudah
+                                                    Diantar</span>
+                                            @else
+                                                <span
+                                                    class="badge badge-pending inline-block rounded-full bg-orange-200 px-3 py-1 text-xs font-semibold text-orange-600">Belum
+                                                    Diantar</span>
+                                            @endif
+                                        </td>
+                                        <td class="block py-2 md:table-cell md:p-3">
+                                            <div class="mt-2 flex flex-wrap gap-2 md:mt-0">
+                                                <button
+                                                    class="btn-detail rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow transition active:scale-95 hover:bg-blue-700"
+                                                    data-nama="{{ $pelanggan->nama ?? '-' }}"
+                                                    data-hp="{{ $pelanggan->no_handphone ?? '-' }}"
+                                                    data-alamat="{{ $pelanggan->detail_alamat ?? '-' }}"
+                                                    data-metode-pengiriman="{{ $order->metode_pengambilan }}"
+                                                    data-metode-pembayaran="{{ $order->metode_pembayaran }}"
+                                                    data-status-pembayaran="{{ $isLunas ? 'Lunas' : 'Belum Lunas' }}"
+                                                    data-nominal-pembayaran="{{ $order->sisa_harga ?? 0 }}"
+                                                    data-waktu-order="{{ $order->created_at->toIso8601String() }}"
+                                                    data-waktu-selesai="{{ $waktuSelesai }}"
+                                                    data-total="Rp {{ number_format($order->total_harga, 0, ',', '.') }}"
+                                                    data-layanan="{{ $layananJson }}">
+                                                    <i class="bi bi-eye mr-1"></i> Detail
+                                                </button>
+
+                                                @if ($order->status !== 'Selesai')
+                                                    @if (!$isLunas)
+                                                        <button
+                                                            class="btn-lunaskan rounded-md bg-amber-500 px-3 py-2 text-sm font-semibold text-white shadow transition active:scale-95 hover:bg-amber-600"
+                                                            data-id="{{ $order->id }}">
+                                                            <i class="bi bi-cash-coin mr-1"></i> Lunaskan
+                                                        </button>
+                                                    @endif
+                                                    <button
+                                                        class="btn-selesai rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow transition active:scale-95 hover:bg-green-700"
+                                                        data-id="{{ $order->id }}"
+                                                        data-lunas="{{ $isLunas ? 'true' : 'false' }}">
+                                                        <i class="bi bi-check-circle mr-1"></i> Selesai
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+            
+            <footer class="py-6 text-center text-sm text-slate-500">
                 © 2025 Avachive Driver. All rights reserved.
             </footer>
-        </main>
+        </div>
 
-        {{-- PENYESUAIAN: Navigasi Mobile diubah agar konsisten --}}
-        <nav
-            class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-            <a href="/driver/dashboard" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
-                <i class="bi bi-box-seam text-2xl"></i>
-                <span class="text-xs">Pengiriman</span>
-            </a>
-            <a href="/driver/riwayat"
-                class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-                <i class="bi bi-clock-history text-2xl"></i>
-                <span class="text-xs">Riwayat</span>
-            </a>
-        </nav>
     </div>
 
-    <div class="modal hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 justify-center items-center p-4"
+    <div class="modal fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         id="detailModal">
-        <div class="modal-content bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg relative animate-scale-up">
+        <div class="modal-content relative w-full max-w-lg animate-scale-up rounded-2xl bg-white p-6 shadow-xl">
             <button class="modal-close absolute top-3 right-4 text-2xl text-slate-500 hover:text-slate-800"
                 id="modalCloseBtn">×</button>
-            <h4 class="text-xl font-bold text-blue-600 mb-4">Detail Pengiriman</h4>
-            <div id="modalBody" class="space-y-3 text-sm max-h-[60vh] overflow-y-auto pr-2"></div>
+            <h4 class="mb-4 text-xl font-bold text-blue-600">Detail Pengiriman</h4>
+            <div id="modalBody" class="max-h-[60vh] space-y-3 overflow-y-auto pr-2 text-sm"></div>
             <div class="mt-6 flex flex-wrap gap-3 border-t pt-4">
                 <a href="#" id="whatsappLink"
-                    class="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-green-500 text-white font-semibold shadow hover:bg-green-600 transition active:scale-95"
+                    class="flex flex-grow items-center justify-center gap-2 rounded-full bg-green-500 px-5 py-3 font-semibold text-white shadow transition active:scale-95 hover:bg-green-600"
                     target="_blank">
                     <i class="bi bi-whatsapp"></i> Hubungi
                 </a>
                 <a href="#" id="mapLink"
-                    class="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-slate-700 text-white font-semibold shadow hover:bg-slate-800 transition active:scale-95"
+                    class="flex flex-grow items-center justify-center gap-2 rounded-full bg-slate-700 px-5 py-3 font-semibold text-white shadow transition active:scale-95 hover:bg-slate-800"
                     target="_blank">
                     <i class="bi bi-geo-alt-fill"></i> Lihat di Maps
                 </a>
@@ -415,7 +363,7 @@
     </div>
 
     <button
-        class="fab hidden fixed right-6 bottom-20 md:bottom-6 z-20 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg grid place-items-center text-2xl hover:bg-blue-700 transition active:scale-95"
+        class="fab fixed right-6 bottom-20 z-20 hidden h-14 w-14 grid-cols-1 place-items-center rounded-full bg-blue-600 text-2xl text-white shadow-lg transition active:scale-95 hover:bg-blue-700 md:bottom-6"
         id="scrollTopBtn" title="Kembali ke atas">
         <i class="bi bi-arrow-up"></i>
     </button>
@@ -530,17 +478,23 @@
                 });
             });
 
-            searchInput.addEventListener('input', function() {
-                const activeFilter = document.querySelector('.tab.active').getAttribute('data-status');
-                filterTable(activeFilter);
-            });
+            if(searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const activeFilter = document.querySelector('.tab.active').getAttribute('data-status');
+                    filterTable(activeFilter);
+                });
+            }
+            
+            if(resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterTable('ALL');
+                });
+            }
 
-            resetBtn.addEventListener('click', function() {
-                searchInput.value = '';
+            if(filterButtons.length > 0) {
                 filterTable('ALL');
-            });
-
-            filterTable('ALL');
+            }
 
             // ====== MODAL DETAIL LOGIC ======
             const modal = document.getElementById('detailModal');
@@ -611,11 +565,10 @@
 
                     const dateTimeOptions = {
                         year: 'numeric',
-                        month: 'numeric',
+                        month: 'long',
                         day: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
-                        hour12: false,
                         timeZone: 'Asia/Jakarta'
                     };
                     const waktuOrderFormatted = new Date(data.waktuOrder).toLocaleString('id-ID',

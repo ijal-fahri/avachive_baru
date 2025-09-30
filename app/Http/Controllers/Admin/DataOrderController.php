@@ -11,24 +11,28 @@ use Carbon\Carbon;
 class DataOrderController extends Controller
 {
     /**
-     * Metode ini tetap ada untuk fungsionalitas lama Anda.
-     * Tidak diubah.
+     * Menampilkan halaman Laporan dan mereset notifikasi berbasis waktu.
      */
     public function index()
     {
-        // 1. Dapatkan ID cabang dari admin yang sedang login
         $cabangId = Auth::user()->cabang_id;
+        $sessionKey = 'last_order_report_check_admin_' . $cabangId;
 
-        // 2. Ambil semua order HANYA dari cabang ini, di-group berdasarkan tanggal
+        // 1. Ambil waktu kunjungan terakhir SEBELUM di-reset.
+        $lastVisit = session($sessionKey);
+
+        // 2. Reset notifikasi dengan mencatat waktu SEKARANG.
+        session([$sessionKey => now()]);
+        
+        // --- Logika lama Anda untuk tampilan awal tetap dipertahankan ---
         $orders = BuatOrder::with('pelanggan')
-            ->where('cabang_id', $cabangId) // <-- FILTER KUNCI DI SINI
+            ->where('cabang_id', $cabangId)
             ->orderBy('created_at', 'desc')
             ->get()
             ->groupBy(function ($order) {
                 return Carbon::parse($order->created_at)->format('Y-m-d');
             });
 
-        // 3. Struktur data yang akan dikirim ke view
         $orderData = [];
         $availableYears = [];
 
@@ -41,28 +45,26 @@ class DataOrderController extends Controller
             }
 
             $orderData[$date] = [
-                'orders' => $ordersOnDate, // Kirim koleksi order lengkap
+                'orders' => $ordersOnDate,
                 'total_pemasukan' => $dailyTotal
             ];
         }
 
-        // Mengurutkan tahun dari yang terbaru
         rsort($availableYears);
         
-        // Pastikan nama view-nya benar: admin.dataorder.index
+        // 3. Kirim waktu kunjungan terakhir ke view.
         return view('order', [
             'order_groups' => $orderData,
-            'years' => $availableYears
+            'years' => $availableYears,
+            'lastVisit' => $lastVisit // <-- Variabel baru dikirim ke view
         ]);
     }
     
     /**
-     * Metode ini tetap ada untuk fungsionalitas lama Anda.
-     * Tidak diubah.
+     * Metode update status (tidak diubah).
      */
     public function updateStatus(Request $request, BuatOrder $order)
     {
-        // Keamanan: Pastikan admin hanya bisa mengubah status order di cabangnya
         if ($order->cabang_id != Auth::user()->cabang_id) {
             abort(403);
         }
@@ -74,23 +76,16 @@ class DataOrderController extends Controller
         return response()->json(['message' => 'Status berhasil diubah!', 'order' => $order]);
     }
 
-    // ====================================================================
-    // METODE BARU DITAMBAHKAN DI SINI UNTUK AJAX DATATABLES
-    // ====================================================================
-
     /**
-     * [BARU] Menyediakan data untuk mengisi dropdown filter (Tahun & Bulan).
-     * Endpoint ini dipanggil oleh AJAX dari halaman laporan.
+     * Menyediakan opsi filter (tidak diubah).
      */
     public function getFilterOptions()
     {
         $cabangId = Auth::user()->cabang_id;
-
-        // Ambil semua tahun unik dari order di cabang ini
         $years = BuatOrder::where('cabang_id', $cabangId)
-                   ->selectRaw('DISTINCT YEAR(created_at) as year')
-                   ->orderBy('year', 'desc')
-                   ->pluck('year');
+                       ->selectRaw('DISTINCT YEAR(created_at) as year')
+                       ->orderBy('year', 'desc')
+                       ->pluck('year');
 
         $months = collect(range(1, 12))->map(function ($month) {
             return [
@@ -106,53 +101,50 @@ class DataOrderController extends Controller
     }
 
     /**
-     * [BARU] Menyediakan data untuk DataTables dengan server-side processing.
-     * Endpoint ini dipanggil oleh AJAX dari halaman laporan.
+     * Menyediakan data untuk DataTables dan menambahkan penanda "baru".
      */
     public function getData(Request $request)
     {
         $cabangId = Auth::user()->cabang_id;
+        
+        // [LOGIKA BARU] Ambil waktu kunjungan terakhir dari request AJAX
+        $lastVisitInput = $request->input('last_visit');
+        $lastVisitTime = $lastVisitInput ? Carbon::parse($lastVisitInput) : null;
 
-        // Query dasar, hanya mengambil order dari cabang admin yang login
         $query = BuatOrder::with('pelanggan')->where('cabang_id', $cabangId);
 
-        // Terapkan filter tahun jika ada
         if ($request->filled('year')) {
             $query->whereYear('created_at', $request->year);
         }
-
-        // Terapkan filter bulan jika ada
         if ($request->filled('month')) {
             $query->whereMonth('created_at', $request->month);
         }
         
-        // Ambil semua hasil yang sudah difilter untuk diproses di PHP
         $filteredOrders = $query->orderBy('created_at', 'desc')->get();
-
-        // Hitung total pemasukan dari data yang sudah difilter
         $totalPemasukan = $filteredOrders->sum('total_harga');
 
-        // Kelompokkan data berdasarkan Bulan & Tahun
         $groupedData = $filteredOrders->groupBy(function ($order) {
             return Carbon::parse($order->created_at)->format('Y-m');
-        })->map(function ($ordersInMonth) {
+        })->map(function ($ordersInMonth) use ($lastVisitTime) { // <-- Kirim $lastVisitTime ke dalam map
             
-            $details = $ordersInMonth->map(function($order) {
-                // Dekode JSON layanan jika perlu
+            $details = $ordersInMonth->map(function($order) use ($lastVisitTime) { // <-- Kirim lagi ke map inner
                 $layananItems = json_decode($order->layanan, true) ?? [];
                 $layananStr = collect($layananItems)->map(function($item) {
                     return ($item['nama'] ?? 'N/A') . ' (' . ($item['kuantitas'] ?? 0) . 'x)';
                 })->implode(', ');
+
+                // [LOGIKA BARU] Tentukan apakah order ini "baru"
+                $isNew = $lastVisitTime && Carbon::parse($order->created_at)->isAfter($lastVisitTime);
 
                 return [
                     'date'     => $order->created_at,
                     'customer' => optional($order->pelanggan)->nama ?? 'N/A',
                     'service'  => $layananStr,
                     'total'    => $order->total_harga,
+                    'is_new'   => $isNew, // <-- Tambahkan penanda "baru" ke data JSON
                 ];
             });
 
-            // Ambil data bulan dari order pertama dalam grup
             $firstOrderDate = Carbon::parse($ordersInMonth->first()->created_at);
 
             return [
@@ -163,7 +155,6 @@ class DataOrderController extends Controller
             ];
         });
         
-        // Format respons sesuai yang diharapkan DataTables
         return response()->json([
             'draw' => intval($request->draw),
             'recordsTotal' => $groupedData->count(),
@@ -173,3 +164,4 @@ class DataOrderController extends Controller
         ]);
     }
 }
+

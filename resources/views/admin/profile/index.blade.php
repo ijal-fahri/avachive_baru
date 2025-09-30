@@ -32,31 +32,8 @@
 <body class="bg-slate-100 text-slate-800 antialiased">
     <div class="flex h-screen bg-slate-100">
         
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out hidden md:flex">
-            <div class="mb-8 text-center">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-2">
-                <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
-            </div>
-
-            <nav class="flex flex-col space-y-2">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-speedometer2 text-lg"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-list-check text-lg"></i>
-                    <span>Data Layanan</span>
-                </a>
-                <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-people text-lg"></i>
-                    <span>Data Karyawan</span>
-                </a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-printer text-lg"></i>
-                    <span>Laporan</span>
-                </a>
-            </nav>
-        </aside>
+        {{-- Memanggil file partials sidebar --}}
+        @include('admin.partials.sidebar')
 
         <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
             <main class="flex-1 overflow-y-auto">
@@ -82,7 +59,7 @@
                                     <span>Profil</span>
                                 </a>
                                 <div class="border-t border-slate-200 my-1"></div>
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                     @csrf
                                     <button type="button" id="logout-button" class="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                         <i class="bi bi-box-arrow-right"></i>
@@ -98,9 +75,29 @@
                             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="bi bi-person-circle text-teal-500"></i> Profil Anda</h3>
                             <div class="flex flex-col sm:flex-row items-center gap-6">
                                 <img src="{{ Auth::user()->profile_photo ? asset('storage/' . Auth::user()->profile_photo) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=14b8a6&color=fff&size=128&bold=true' }}" alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover">
-                                <div class="text-center sm:text-left">
+                                <div class="text-center sm:text-left flex-1">
                                     <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
                                     <p class="text-slate-500 mt-1">Role: {{ ucfirst(Auth::user()->usertype) }}</p>
+                                    
+                                    {{-- [PERUBAHAN] Menambahkan info cabang yang lebih modern --}}
+                                    @if(Auth::user()->cabang)
+                                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-left">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-shop-window w-6 text-center text-teal-500"></i>
+                                                <span><strong class="font-semibold">Cabang:</strong> {{ Auth::user()->cabang->nama_cabang }}</span>
+                                            </div>
+                                            @if(Auth::user()->cabang->no_whatsapp)
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-whatsapp w-6 text-center text-teal-500"></i>
+                                                {{-- [PERUBAHAN] Menambahkan label "Nomor Cabang:" --}}
+                                                <span><strong class="font-semibold">Nomor Cabang:</strong> {{ Auth::user()->cabang->no_whatsapp }}</span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endif
+
                                     <button id="openProfileModalBtn" class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                                         <i class="bi bi-pencil-square mr-2"></i>Edit Profil
                                     </button>
@@ -118,7 +115,7 @@
                             </ul>
                         </section>
 
-                        <section class="bg-white rounded-2xl shadow-lg p-6">
+                         <section class="bg-white rounded-2xl shadow-lg p-6">
                              <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="bi bi-info-circle text-teal-500"></i> Tentang Aplikasi</h3>
                             <p class="text-slate-600 leading-relaxed">
                                 Aplikasi ini dibuat untuk membantu pemilik laundry dalam mengelola operasional harian secara efisien dan profesional. Dikembangkan oleh <strong class="font-semibold text-slate-700">My Team</strong> sebagai bagian dari sistem administrasi digital laundry modern.
@@ -130,25 +127,6 @@
         </div>
     </div>
     
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('produk.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-list-check text-2xl"></i>
-            <span class="text-xs">Layanan</span>
-        </a>
-        <a href="{{ route('datauser') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-people text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-        <a href="{{ route('dataorder') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-printer text-2xl"></i>
-            <span class="text-xs">Laporan</span>
-        </a>
-    </nav>
-
     {{-- MODAL EDIT PROFIL (AKTIF) --}}
     <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 hidden">
         <div id="profileModalContent" class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative transform scale-95 opacity-0">
@@ -170,7 +148,7 @@
                                 Pilih Foto
                             </label>
                             <input type="file" name="profile_photo" id="profile_photo" class="hidden" accept="image/*">
-                            <p class="text-xs text-slate-500 mt-2">Max. 2MB (JPG, PNG, GIF)</p>
+                            <p class="text-xs text-slate-500 mt-2">Max. 2MB (JPG, PNG)</p>
                         </div>
                     </div>
                 </div>
@@ -197,6 +175,36 @@
             </form>
         </div>
     </div>
+
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success', 
+                title: '{{ session('success') }}', 
+                showConfirmButton: false, timer: 3000
+            });
+        </script>
+    @endif
+    @if($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let errorMessages = `<ul class="mt-2 list-disc list-inside text-sm text-left">`;
+                @foreach ($errors->all() as $error)
+                    errorMessages += `<li>{{ $error }}</li>`;
+                @endforeach
+                errorMessages += `</ul>`;
+
+                Swal.fire({
+                    icon: 'error', title: 'Gagal Memperbarui Profil',
+                    html: errorMessages, confirmButtonColor: '#14b8a6'
+                });
+                
+                @if(session('error_modal') === 'edit')
+                    document.getElementById('openProfileModalBtn').click();
+                @endif
+            });
+        </script>
+    @endif
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -238,6 +246,8 @@
             const openProfileModalBtn = document.getElementById('openProfileModalBtn');
             const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
             const cancelProfileChangeBtn = document.getElementById('cancelProfileChangeBtn');
+            const imagePreview = document.getElementById('imagePreview');
+            const profilePhotoInput = document.getElementById('profile_photo');
             
             const openModal = (modal, content) => {
                 modal.classList.remove('hidden');
@@ -256,10 +266,6 @@
                 if (e.target === profileModal) closeModal(profileModal, profileModalContent); 
             });
 
-            // Image Preview Logic
-            const profilePhotoInput = document.getElementById('profile_photo');
-            const imagePreview = document.getElementById('imagePreview');
-            
             profilePhotoInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
@@ -270,32 +276,6 @@
                     reader.readAsDataURL(file);
                 }
             });
-
-            // SweetAlert for session success
-            @if(session('success'))
-                Swal.fire({
-                    icon: 'success', title: 'Berhasil!', text: '{{ session('success') }}',
-                    confirmButtonColor: '#14b8a6'
-                });
-            @endif
-
-            // SweetAlert for Validation Errors
-            @if($errors->any())
-                let errorMessages = `<ul class="mt-2 list-disc list-inside text-sm text-left">`;
-                @foreach ($errors->all() as $error)
-                    errorMessages += `<li>{{ $error }}</li>`;
-                @endforeach
-                errorMessages += `</ul>`;
-
-                Swal.fire({
-                    icon: 'error', title: 'Gagal Memperbarui Profil', html: errorMessages,
-                    confirmButtonColor: '#14b8a6'
-                });
-                
-                @if(session('error_modal') === 'edit')
-                    openModal(profileModal, profileModalContent);
-                @endif
-            @endif
         });
     </script>
 </body>

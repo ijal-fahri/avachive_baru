@@ -372,7 +372,7 @@
                     <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                         <i class="bi bi-list"></i>
                     </button>
-                    <h1 class="text-lg font-semibold text-slate-800">List Order</h1>
+                    <h1 class="text-lg font-semibold text-slate-800">List Order Kasir Cabang {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
                 </div>
                 <div class="relative">
                     <button id="user-menu-button" class="flex items-center gap-3 cursor-pointer">

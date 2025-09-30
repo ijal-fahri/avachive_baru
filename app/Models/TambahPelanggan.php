@@ -10,19 +10,20 @@ class TambahPelanggan extends Model
     use HasFactory;
     
     protected $fillable = ['nama',
-        'no_handphone',
-        'provinsi',
-        'provinsi_id',
-        'kota',
-        'kota_id',
-        'kecamatan',
-        'kecamatan_id',
-        'desa',
-        'desa_id',
-        'kodepos',
-        'detail_alamat'
-        ,'cabang_id'];
-
+    'user_id', // <-- TAMBAHKAN INI
+    'no_handphone',
+    'provinsi',
+    'provinsi_id',
+    'kota',
+    'kota_id',
+    'kecamatan',
+    'kecamatan_id',
+    'desa',
+    'desa_id',
+    'kodepos',
+    'detail_alamat'
+    ,'cabang_id'];
+    
     /**
      * Relasi ke model BuatOrder (Satu Pelanggan memiliki Banyak Order).
      */
@@ -37,6 +38,11 @@ class TambahPelanggan extends Model
     public function cabang()
     {
         return $this->belongsTo(Cabang::class, 'cabang_id');
+    }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
 

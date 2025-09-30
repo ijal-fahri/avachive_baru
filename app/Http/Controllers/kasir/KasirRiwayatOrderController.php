@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\BuatOrder;
 use App\Models\TambahPelanggan;
+use Illuminate\Support\Facades\Auth;
 
 class KasirRiwayatOrderController extends Controller
 {
@@ -21,9 +22,12 @@ class KasirRiwayatOrderController extends Controller
         if ($request->has('perPage')) {
             session(['perPage' => $request->get('perPage')]);
         }
-        
+
+        $cabangId = Auth::user()->cabang_id;
+
         $query = BuatOrder::with('pelanggan')
-            ->where('status', 'Selesai');
+            ->where('status', 'Selesai')
+            ->where('cabang_id', $cabangId); // <-- filter sesuai cabang
 
         if ($request->filled('search')) {
             $search = $request->search;

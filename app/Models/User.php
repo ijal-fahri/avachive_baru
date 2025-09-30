@@ -18,12 +18,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'email', // <-- TAMBAHKAN BARIS INI
         'password',
-        'usertype', 
-        'plain_password', // Pastikan kolom ini ada di database Anda
-        'cabang_id',
+        'plain_password', // <-- Pastikan ini juga ada
+        'usertype',       // <-- Pastikan ini juga ada
         'profile_photo',
+        'cabang_id',      // <-- Jika Anda menggunakan ini saat create, tambahkan juga
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -53,6 +55,11 @@ class User extends Authenticatable
     public function cabang()
     {
         return $this->belongsTo(Cabang::class, 'cabang_id');
+    }
+
+    public function pelanggan()
+    {
+        return $this->hasOne(TambahPelanggan::class, 'user_id');
     }
 }
 

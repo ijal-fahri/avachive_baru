@@ -92,7 +92,7 @@
 
 <body class="bg-gray-50">
     <!-- Sidebar Start -->
-    @include('components.sidebar_kasir')
+    @include('components.sidebar_kasir', ['dashboardNewServiceCount' => $dashboardNewServiceCount])
     <!-- Sidebar End -->
 
     <!-- Main Content Start -->
@@ -104,7 +104,7 @@
                 <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="text-lg font-semibold text-slate-800">Dashboard Kasir Cabang
+                <h1 class="text-lg font-semibold text-slate-800">Dashboard Kasir
                     {{ Auth::user()->cabang->nama_cabang ?? 'Cabang Tidak Ditemukan' }}</h1>
             </div>
             <div class="relative">
@@ -169,7 +169,7 @@
                         <p class="font-bold text-lg">{{ $monthOrders }}</p>
                     </div>
                     <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                        <p class="text-sm text-yellow-600">Pelanggan Terbaru</p>
+                        <p class="text-sm text-yellow-600">Pelanggan</p>
                         <p class="font-bold text-lg">{{ $newCustomers }}</p>
                     </div>
                 </div>
@@ -206,12 +206,18 @@
                 <h2 class="text-xl font-semibold mb-6 text-gray-800">Kelola Laundry</h2>
                 <div class="grid grid-cols-2 gap-4">
                     <a href="javascript:void(0);" id="openServiceModal"
-                        class="text-center p-4 hover:bg-gray-50 rounded-lg transition cursor-pointer">
+                        class="text-center p-4 hover:bg-gray-50 rounded-lg transition cursor-pointer relative">
                         <div class="text-blue-600 text-3xl mb-2">
                             <i class="fas fa-shopping-bag"></i>
                         </div>
                         <p class="text-sm font-semibold">Layanan</p>
                         <p class="text-xs text-gray-600">{{ $totalServices }} Layanan aktif</p>
+                        @if (isset($dashboardNewServiceCount) && $dashboardNewServiceCount > 0)
+                            <span id="newServiceBadge"
+                                class="absolute top-2 right-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white animate-pulse cursor-pointer z-10">
+                                {{ $dashboardNewServiceCount }} Baru
+                            </span>
+                        @endif
                     </a>
                     <a href="pelanggan" class="text-center p-4 hover:bg-gray-50 rounded-lg transition cursor-pointer">
                         <div class="text-green-600 text-3xl mb-2">
@@ -239,7 +245,7 @@
         </div>
     </div>
     <!-- Main Content End -->
-<div class="pb-20"></div>
+    <div class="pb-20"></div>
     <!-- Pelanggan Modal -->
     <div id="pelangganModal"
         class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 bg-white/50 backdrop-blur-sm transition-opacity overflow-y-auto">
@@ -366,6 +372,12 @@
                             required></textarea>
                     </div>
 
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" name="email" id="email"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+
                     <div class="flex justify-end space-x-3 pt-4">
                         <button type="button" id="cancelBtn"
                             class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Kembali</button>
@@ -417,6 +429,56 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Layanan Baru -->
+    <div id="layananBaruModal"
+        class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 bg-white/50 backdrop-blur-sm transition-opacity overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 my-8 modal-content">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800">Layanan Baru</h2>
+                <button id="closeLayananBaruModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                @php
+                    $newServices = $layanans->filter(function ($item) use ($lastCheck) {
+                        return $lastCheck &&
+                            \Carbon\Carbon::parse($item->created_at)->gt(\Carbon\Carbon::parse($lastCheck));
+                    });
+                @endphp
+                @if ($newServices->count() > 0)
+                    <table class="service-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Kategori</th>
+                                <th>Nama Layanan</th>
+                                <th>Harga</th>
+                                <th>Satuan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($newServices as $item)
+                                <tr>
+                                    <td>{{ ucfirst($item->paket) }}</td>
+                                    <td>{{ $item->nama }}</td>
+                                    <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
+                                    <td>{{ $item->kategori }}</td>
+                                    <td>
+                                        <span
+                                            class="inline-block px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">Baru</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="text-center text-gray-500 py-8">Tidak ada layanan baru.</div>
+                @endif
             </div>
         </div>
     </div>
@@ -600,18 +662,39 @@
             const closeLayananBtn = document.getElementById('closeLayananModal');
             const searchLayananInput = document.getElementById('searchLayanan');
             const rawData = @json($layanans);
+            const now = new Date();
 
-            const layananData = rawData.map(item => ({
-                kategori: item.paket,
-                nama: item.nama,
-                harga: item.harga,
-                satuan: item.kategori
-            }));
+            const layananData = rawData.map(item => {
+                const createdAt = new Date(item.created_at);
+                // Hitung selisih waktu dalam milidetik
+                const diffMs = now - createdAt;
+                // 1 hari = 86400000 ms
+                const isBaru = diffMs < 86400000;
+                return {
+                    kategori: item.paket,
+                    nama: item.nama,
+                    harga: item.harga,
+                    satuan: item.kategori,
+                    isBaru: isBaru
+                };
+            });
 
             openServiceBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 populateLayananTable(layananData);
                 layananModal.classList.remove('hidden');
+                // Jika ada notifikasi layanan baru, update session dan reload
+                if (newServiceBadge) {
+                    fetch('{{ route('kasir.layananBaruSeen') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
             });
 
             const closeLayananModal = () => {
@@ -640,11 +723,14 @@
                 data.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                <td>${capitalizeFirstLetter(item.kategori)}</td>
-                <td>${item.nama}</td>
-                <td>Rp ${item.harga.toLocaleString('id-ID')}</td>
-                <td>${item.satuan}</td>
-            `;
+                        <td>${capitalizeFirstLetter(item.kategori)}</td>
+                        <td>
+                            ${item.nama}
+                            ${item.isBaru ? '<span class="ml-2 inline-block px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold align-middle">Baru</span>' : ''}
+                        </td>
+                        <td>Rp ${item.harga.toLocaleString('id-ID')}</td>
+                        <td>${item.satuan}</td>
+                    `;
                     tbody.appendChild(row);
                 });
             }
@@ -681,6 +767,38 @@
                 }
                 if (desaSelect.value) {
                     addHiddenInputs.desa.value = desaSelect.options[desaSelect.selectedIndex].text;
+                }
+            });
+
+            // Layanan Baru Badge Logic
+            const newServiceBadge = document.getElementById('newServiceBadge');
+            const layananBaruModal = document.getElementById('layananBaruModal');
+
+            if (newServiceBadge) {
+                newServiceBadge.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    layananBaruModal.classList.remove('hidden');
+                    // Update session via AJAX, lalu reload halaman
+                    fetch('{{ route('kasir.layananBaruSeen') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    }).then(() => {
+                        // Setelah session diupdate, reload halaman
+                        location.reload();
+                    });
+                });
+            }
+            if (closeLayananBaruModal) {
+                closeLayananBaruModal.addEventListener('click', function() {
+                    layananBaruModal.classList.add('hidden');
+                });
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !layananBaruModal.classList.contains('hidden')) {
+                    layananBaruModal.classList.add('hidden');
                 }
             });
         });

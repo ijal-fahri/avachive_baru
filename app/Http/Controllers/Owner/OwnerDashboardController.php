@@ -13,20 +13,34 @@ class OwnerDashboardController extends Controller
 {
     public function index()
     {
-        // --- Data untuk Kartu Statistik ---
+        // [LOGIKA BARU] 1. Ambil waktu kunjungan terakhir SEBELUM di-reset.
+        $lastVisit = session('last_dashboard_check');
+
+        // [LOGIKA RESET] 2. Reset notifikasi dengan mencatat waktu SEKARANG.
+        session(['last_dashboard_check' => now()]);
+
+        // --- Sisa kode untuk menampilkan data di Dashboard ---
         $totalPendapatan = BuatOrder::sum('total_harga');
         $orderBulanIni = BuatOrder::whereMonth('created_at', Carbon::now()->month)->count();
-        // PERBAIKAN: Menyesuaikan status order dalam proses
         $orderDalamProses = BuatOrder::whereIn('status', ['Diproses', 'Sudah Bisa Diambil'])->count();
         $pelangganBaru = TambahPelanggan::whereMonth('created_at', Carbon::now()->month)->count();
 
-        // --- Data untuk Pipeline Order (DIPERBAIKI agar sesuai dengan status dari Kasir) ---
+        // [LOGIKA BARU] 3. Tambahkan penanda 'is_new' pada data pipeline
         $pipelineOrdersData = BuatOrder::with('pelanggan')
-            ->whereIn('status', ['Diproses', 'Sudah Bisa Diambil', 'Selesai']) // Ambil semua order yang relevan
+            ->whereIn('status', ['Diproses', 'Sudah Bisa Diambil', 'Selesai'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($order) use ($lastVisit) {
+                // Tandai sebagai 'baru' jika diupdate setelah kunjungan terakhir
+                if ($lastVisit) {
+                    $order->is_new = Carbon::parse($order->updated_at)->isAfter(Carbon::parse($lastVisit));
+                } else {
+                    // Jika ini kunjungan pertama (setelah session hilang), anggap semua baru
+                    $order->is_new = true;
+                }
+                return $order;
+            });
         
-        // Buat grup pipeline secara manual berdasarkan status dan metode pengambilan
         $pipelineOrders = collect([
             'Diproses' => $pipelineOrdersData->where('status', 'Diproses'),
             'Siap diambil' => $pipelineOrdersData->where('status', 'Sudah Bisa Diambil')->where('metode_pengambilan', 'Ambil Sendiri'),
@@ -34,7 +48,6 @@ class OwnerDashboardController extends Controller
             'Selesai' => $pipelineOrdersData->where('status', 'Selesai'),
         ]);
 
-        // --- Data untuk Grafik & Pelanggan Teratas ---
         $transaksiHarian = BuatOrder::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->where('created_at', '>=', Carbon::now()->subDays(6))
             ->groupBy('date')
@@ -44,7 +57,7 @@ class OwnerDashboardController extends Controller
 
         $pelangganTeratas = BuatOrder::with('pelanggan')
             ->select('tambah_pelanggan_id', DB::raw('count(*) as total_orders'))
-            ->whereNotNull('tambah_pelanggan_id') // Menghindari pelanggan null
+            ->whereNotNull('tambah_pelanggan_id')
             ->groupBy('tambah_pelanggan_id')
             ->orderByDesc('total_orders')
             ->take(3)
@@ -61,4 +74,3 @@ class OwnerDashboardController extends Controller
         ));
     }
 }
-

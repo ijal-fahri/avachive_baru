@@ -9,20 +9,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Auth; // Import Auth
+use Carbon\Carbon; // Import Carbon
 
 class OwnerDataKaryawanController extends Controller
 {
     /**
-     * Menampilkan halaman daftar karyawan.
+     * Menampilkan halaman daftar karyawan dan mereset notifikasi.
      */
     public function index(Request $request)
     {
+        // [LOGIKA DIPERBARUI]
+        // 1. Ambil waktu kunjungan terakhir SEBELUM di-reset.
+        $lastVisit = session('last_karyawan_check');
+
+        // 2. Reset notifikasi dengan mencatat waktu SEKARANG.
+        session(['last_karyawan_check' => now()]);
+
         $cabangs = Cabang::orderBy('nama_cabang')->get();
-        return view('owner.datakaryawan.index', compact('cabangs'));
+        // 3. Kirim waktu kunjungan terakhir ke view
+        return view('owner.datakaryawan.index', compact('cabangs', 'lastVisit'));
     }
 
     /**
-     * Menyimpan karyawan baru ke database.
+     * Menyimpan karyawan baru ke database. (Tidak diubah)
      */
     public function store(Request $request)
     {
@@ -53,7 +63,7 @@ class OwnerDataKaryawanController extends Controller
     }
 
     /**
-     * Menampilkan data karyawan spesifik (via AJAX/Fetch).
+     * Menampilkan data karyawan spesifik (via AJAX/Fetch). (Tidak diubah)
      */
     public function show(User $datakaryawan)
     {
@@ -65,7 +75,7 @@ class OwnerDataKaryawanController extends Controller
     }
 
     /**
-     * Memperbarui data karyawan di database.
+     * Memperbarui data karyawan di database. (Tidak diubah)
      */
     public function update(Request $request, User $datakaryawan)
     {
@@ -102,7 +112,7 @@ class OwnerDataKaryawanController extends Controller
     }
 
     /**
-     * Menghapus karyawan dari database.
+     * Menghapus karyawan dari database. (Tidak diubah)
      */
     public function destroy(User $datakaryawan)
     {
@@ -121,10 +131,14 @@ class OwnerDataKaryawanController extends Controller
     }
 
     /**
-     * Menyediakan data karyawan untuk DataTables.
+     * Menyediakan data karyawan untuk DataTables dan menambahkan penanda "baru".
      */
     public function getKaryawanData(Request $request)
     {
+        // [LOGIKA BARU] Ambil waktu kunjungan terakhir dari request AJAX
+        $lastVisitInput = $request->input('last_visit');
+        $lastVisitTime = $lastVisitInput ? Carbon::parse($lastVisitInput) : null;
+        
         $query = User::with('cabang')->whereIn('usertype', ['kasir', 'driver']);
 
         if ($request->filled('cabang_id') && $request->cabang_id != 'semua') {
@@ -148,12 +162,15 @@ class OwnerDataKaryawanController extends Controller
         $recordsFiltered = $query->count();
         
         $karyawans = $query->skip($request->start)
-                           ->take($request->length)
-                           ->latest()
-                           ->get();
+                             ->take($request->length)
+                             ->latest()
+                             ->get();
 
         $data = [];
         foreach ($karyawans as $key => $karyawan) {
+            // [LOGIKA BARU] Tentukan apakah karyawan ini "baru"
+            $isNew = $lastVisitTime && Carbon::parse($karyawan->created_at)->isAfter($lastVisitTime);
+
             $data[] = [
                 'no' => $request->start + $key + 1,
                 'profile_photo' => $karyawan->profile_photo,
@@ -162,6 +179,7 @@ class OwnerDataKaryawanController extends Controller
                 'usertype' => $karyawan->usertype,
                 'plain_password' => $karyawan->plain_password,
                 'id' => $karyawan->id,
+                'is_new' => $isNew, // <-- Tambahkan penanda "baru" ke data JSON
             ];
         }
         

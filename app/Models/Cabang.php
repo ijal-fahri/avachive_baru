@@ -12,6 +12,7 @@ class Cabang extends Model
     protected $fillable = [
         'nama_cabang',
         'alamat',
+        'no_whatsapp', // Pastikan ini sesuai dengan kolom di tabel
     ];
 
     /**
@@ -30,4 +31,3 @@ class Cabang extends Model
         return $this->hasMany(User::class, 'cabang_id');
     }
 }
-

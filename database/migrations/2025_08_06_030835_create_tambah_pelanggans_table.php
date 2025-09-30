@@ -32,12 +32,24 @@ return new class extends Migration
             $table->text('detail_alamat'); 
             $table->timestamps();
         });
+
+        // Add user_id column and foreign key constraint
+        Schema::table('tambah_pelanggans', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id')->nullable()->after('id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+        });
     }
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
+        Schema::table('tambah_pelanggans', function (Blueprint $table) {
+            // Drop foreign key constraint and user_id column
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
+        });
+
         Schema::dropIfExists('tambah_pelanggans');
     }
 };

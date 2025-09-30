@@ -1,212 +1,63 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manajemen Karyawan | Avachive</title>
+    <title>Data Karyawan - Avachive Owner</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .form-input,
-        #karyawanTable_wrapper .dt-search input,
-        #karyawanTable_wrapper .dt-length select {
-            width: 100%;
-            background-color: white !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 0.5rem !important;
-            padding: 0.6rem 1rem !important;
-            transition: all 0.2s ease-in-out;
-            outline: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
+        body { font-family: 'Poppins', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #14b8a6; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0d9488; }
+        .form-input, 
+        #karyawanTable_wrapper .dt-search input, 
+        #karyawanTable_wrapper .dt-length select { width: 100%; background-color: white !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; border-radius: 0.5rem !important; padding: 0.6rem 1rem !important; transition: all 0.2s ease-in-out; outline: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .form-input:focus,
-        #karyawanTable_wrapper .dt-search input:focus,
-        #karyawanTable_wrapper .dt-length select:focus {
-            border-color: #14b8a6 !important;
-            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important;
-        }
-
+        #karyawanTable_wrapper .dt-search input:focus, 
+        #karyawanTable_wrapper .dt-length select:focus { border-color: #14b8a6 !important; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important; }
         select.form-input,
-        #karyawanTable_wrapper .dt-length select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem !important;
-        }
-
-        #karyawanTable_wrapper .dt-search input {
-            border-radius: 9999px !important;
-        }
-
-        #karyawanTable_wrapper .dt-length select {
-            width: auto;
-        }
-
-        @media (min-width: 768px) {
-            #karyawanTable_wrapper .dt-search input {
-                min-width: 250px;
-                width: auto;
-            }
-        }
-
+        #karyawanTable_wrapper .dt-length select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem !important; }
+        #karyawanTable_wrapper .dt-search input { border-radius: 9999px !important; }
+        #karyawanTable_wrapper .dt-length select { width: auto; }
+        @media (min-width: 768px) { #karyawanTable_wrapper .dt-search input { min-width: 250px; width: auto; } }
         #karyawanTable_wrapper .dt-controls-row,
-        #karyawanTable_wrapper .dt-bottom-row {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 0.5rem 0.25rem;
-        }
-
-        #karyawanTable_wrapper .dt-controls-row {
-            margin-bottom: 1.5rem;
-        }
-
-        #karyawanTable_wrapper .dt-bottom-row {
-            margin-top: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-
-            #karyawanTable_wrapper .dt-controls-row,
-            #karyawanTable_wrapper .dt-bottom-row {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-
-        #karyawanTable {
-            border-collapse: collapse;
-        }
-
-        #karyawanTable thead th {
-            font-weight: 600;
-            text-align: left;
-            padding: 1rem 1.25rem;
-            color: #475569;
-            background-color: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        #karyawanTable tbody td {
-            padding: 1rem 1.25rem;
-            color: #334155;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        #karyawanTable tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        #karyawanTable tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        #karyawanTable_wrapper .dt-info {
-            color: #64748b;
-            font-size: 0.875rem;
-        }
-
-        #karyawanTable_wrapper .dt-paging .dt-paging-button {
-            border: 1px solid #cbd5e1 !important;
-            transition: all 0.15s ease-in-out !important;
-            font-weight: 600 !important;
-            border-radius: 0.5rem !important;
-            margin: 0 3px !important;
-            padding: 0.5em 1em !important;
-            background: #fff !important;
-            color: #334155 !important;
-        }
-
-        #karyawanTable_wrapper .dt-paging .dt-paging-button:not(.disabled):hover {
-            background-color: #f1f5f9 !important;
-            border-color: #94a3b8 !important;
-        }
-
-        #karyawanTable_wrapper .dt-paging .dt-paging-button.current {
-            background-color: #14b8a6 !important;
-            color: #ffffff !important;
-            border-color: #14b8a6 !important;
-        }
-
-        #karyawanTable_wrapper .dt-paging .dt-paging-button.disabled {
-            color: #94a3b8 !important;
-            background-color: #f8fafc !important;
-        }
-
-        @keyframes modal-in {
-            from {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .animate-modal-in {
-            animation: modal-in 0.3s ease-out;
-        }
+        #karyawanTable_wrapper .dt-bottom-row { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0.25rem; }
+        #karyawanTable_wrapper .dt-controls-row { margin-bottom: 1.5rem; }
+        #karyawanTable_wrapper .dt-bottom-row { margin-top: 1.5rem; }
+        @media (min-width: 768px) { #karyawanTable_wrapper .dt-controls-row, #karyawanTable_wrapper .dt-bottom-row { flex-direction: row; justify-content: space-between; align-items: center; } }
+        #karyawanTable { border-collapse: collapse; }
+        #karyawanTable thead th { font-weight: 600; text-align: left; padding: 1rem 1.25rem; color: #475569; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        #karyawanTable tbody td { padding: 1rem 1.25rem; color: #334155; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        #karyawanTable tbody tr:last-child td { border-bottom: none; }
+        #karyawanTable tbody tr:hover { background-color: #f8fafc; }
+        #karyawanTable_wrapper .dt-info { color: #64748b; font-size: 0.875rem; }
+        #karyawanTable_wrapper .dt-paging .dt-paging-button { border: 1px solid #cbd5e1 !important; transition: all 0.15s ease-in-out !important; font-weight: 600 !important; border-radius: 0.5rem !important; margin: 0 3px !important; padding: 0.5em 1em !important; background: #fff !important; color: #334155 !important; }
+        #karyawanTable_wrapper .dt-paging .dt-paging-button:not(.disabled):hover { background-color: #f1f5f9 !important; border-color: #94a3b8 !important; }
+        #karyawanTable_wrapper .dt-paging .dt-paging-button.current { background-color: #14b8a6 !important; color: #ffffff !important; border-color: #14b8a6 !important; }
+        #karyawanTable_wrapper .dt-paging .dt-paging-button.disabled { color: #94a3b8 !important; background-color: #f8fafc !important; }
+        @keyframes modal-in { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .animate-modal-in { animation: modal-in 0.3s ease-out; }
     </style>
 </head>
 
 <body class="bg-slate-100">
     <div class="flex">
-        <aside id="sidebar"
-            class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
-            <div>
-                <div class="flex flex-col items-center text-center mb-10">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
-                    <div class="text-2xl font-bold text-teal-400">Avachive Owner</div>
-                </div>
-
-                <nav class="space-y-3">
-                    <a href="{{ route('owner.dashboard') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-grid-1x2-fill mr-4 text-lg"></i><span class="font-medium">Dashboard</span></a>
-                    <a href="{{ route('owner.manage') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-receipt-cutoff mr-4 text-lg"></i><span class="font-medium">Manajemen
-                            Order</span></a>
-                    <a href="{{ route('owner.laporan.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-shop-window mr-4 text-lg"></i><span class="font-medium">Data Cabang</span></a>
-                    <a href="{{ route('owner.dataadmin.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-person-badge-fill mr-4 text-lg"></i><span class="font-medium">Data
-                            Admin</span></a>
-                    <a href="{{ route('owner.datakaryawan.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg bg-teal-400 text-slate-900 font-semibold shadow-lg"><i
-                            class="bi bi-people-fill mr-4 text-lg"></i><span class="font-medium">Data
-                            Karyawan</span></a>
-                </nav>
-            </div>
-        </aside>
+        
+        @include('owner.partials.sidebar')
 
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header
@@ -376,38 +227,39 @@
             </form>
         </div>
     </div>
+    
+    @if (session('success'))
+    <script>
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '{{ session('success') }}', showConfirmButton: false, timer: 3000 });
+    </script>
+    @endif
+    @if($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const userModal = document.getElementById('karyawanFormModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const userForm = document.getElementById('karyawanForm');
+                const formMethod = document.getElementById('formMethod');
+                
+                // Logika ini mungkin perlu penyesuaian jika Anda menggunakan session flash yang berbeda
+                // Untuk sementara, kita asumsikan form tambah yang error
+                openModal('add'); 
+                
+                $('#name').val("{{ old('name') }}");
+                $('#cabang_id_modal').val("{{ old('cabang_id') }}");
+                $('#usertype_modal').val("{{ old('usertype') }}");
 
-    <nav
-        class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('owner.dashboard') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-grid-1x2-fill text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('owner.manage') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-receipt-cutoff text-2xl"></i>
-            <span class="text-xs">Order</span>
-        </a>
-        <a href="{{ route('owner.laporan.index') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-shop-window text-2xl"></i>
-            <span class="text-xs">Cabang</span>
-        </a>
-        <a href="{{ route('owner.dataadmin.index') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-person-badge-fill text-2xl"></i>
-            <span class="text-xs">Admin</span>
-        </a>
-        <a href="{{ route('owner.datakaryawan.index') }}"
-            class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
-            <i class="bi bi-people-fill text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-    </nav>
+                let errorList = "<ul class='mt-2 list-disc list-inside text-sm text-left'>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>";
+                Swal.fire({ title: 'Terjadi Kesalahan!', html: errorList, icon: 'error', confirmButtonColor: '#14b8a6' });
+            });
+        </script>
+    @endif
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // [PERUBAHAN 1] Ambil variabel 'lastVisit' dari controller
+            const lastVisitTime = @json($lastVisit ?? null);
+
             const karyawanTable = $('#karyawanTable').DataTable({
                 dom: '<"dt-controls-row"<"dt-length"l><"dt-search"f>>t<"dt-bottom-row"<"dt-info"i><"dt-paging"p>>',
                 processing: true,
@@ -422,44 +274,36 @@
                     data: d => {
                         d.cabang_id = $('#cabangFilter').val();
                         d.usertype = $('#roleFilter').val();
+                        // [PERUBAHAN 2] Kirim 'lastVisitTime' ke controller saat request data
+                        d.last_visit = lastVisitTime;
                     }
                 },
                 columns: [{
-                        data: 'no',
-                        name: 'no',
-                        orderable: false,
-                        searchable: false
+                        data: 'no', name: 'no', orderable: false, searchable: false
                     },
                     {
-                        data: 'profile_photo',
-                        name: 'foto',
-                        orderable: false,
-                        searchable: false,
+                        data: 'profile_photo', name: 'foto', orderable: false, searchable: false,
                         render: function(data, type, row) {
                             const photoUrl = data ? `{{ asset('storage') }}/${data}` :
                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name)}&background=14b8a6&color=fff&size=40`;
                             return `<img src="${photoUrl}" alt="${row.name}" class="w-10 h-10 rounded-full object-cover">`;
                         }
                     },
+                    // [PERUBAHAN 3] Modifikasi kolom 'Nama' untuk menampilkan badge
                     {
-                        data: 'name',
-                        name: 'name',
-                        className: 'font-semibold'
+                        data: 'name', name: 'name', className: 'font-semibold',
+                        render: function(data, type, row) {
+                            let badge = '';
+                            if (row.is_new) {
+                                badge = ' <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-teal-500 rounded-full animate-pulse">BARU</span>';
+                            }
+                            return data + badge;
+                        }
                     },
+                    { data: 'nama_cabang', name: 'cabang.nama_cabang' },
+                    { data: 'usertype', name: 'usertype', className: 'capitalize' },
                     {
-                        data: 'nama_cabang',
-                        name: 'cabang.nama_cabang'
-                    },
-                    {
-                        data: 'usertype',
-                        name: 'usertype',
-                        className: 'capitalize'
-                    },
-                    {
-                        data: 'plain_password',
-                        name: 'password',
-                        orderable: false,
-                        searchable: false,
+                        data: 'plain_password', name: 'password', orderable: false, searchable: false,
                         render: function(data, type, row) {
                             if (!data) return '<span class="text-slate-400">Tidak tersedia</span>';
                             return `
@@ -474,11 +318,7 @@
                         }
                     },
                     {
-                        data: 'id',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center',
+                        data: 'id', name: 'action', orderable: false, searchable: false, className: 'text-center',
                         render: function(data, type, row) {
                             return `
                             <div class="flex gap-2 justify-center">
@@ -497,8 +337,14 @@
                         }
                     }
                 ],
-                language: {
-                    /* ... Bahasa ... */ }
+                language: { 
+                    search: "", searchPlaceholder: "Cari...", lengthMenu: "Tampil _MENU_ entri",
+                    emptyTable: `<div class="text-center p-10"><i class="bi bi-person-x text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Belum Ada Karyawan</h4><p class="text-slate-500">Gunakan tombol 'Tambah Karyawan' untuk membuat data baru.</p></div>`,
+                    zeroRecords: `<div class="text-center p-10"><i class="bi bi-search text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Karyawan Tidak Ditemukan</h4><p class="text-slate-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p></div>`,
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ entri", infoEmpty: "Menampilkan 0 entri", infoFiltered: "(disaring dari _MAX_ total entri)",
+                    paginate: { next: ">", previous: "<" },
+                    processing: '<div class="flex items-center gap-2 text-slate-600"><svg class="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Memuat Data...</span></div>',
+                }
             });
 
             const karyawanFormModal = document.getElementById('karyawanFormModal');
@@ -591,7 +437,6 @@
                 }
             });
 
-            // --- UI Scripts ---
             const profileDropdownBtn = document.getElementById('profileDropdownBtn');
             const profileDropdownMenu = document.getElementById('profileDropdownMenu');
             profileDropdownBtn.addEventListener('click', () => profileDropdownMenu.classList.toggle('hidden'));
@@ -652,5 +497,5 @@
         });
     </script>
 </body>
-
 </html>
+

@@ -79,7 +79,7 @@
 
 <body class="bg-gray-50">
     <!-- Sidebar Start -->
-    @include('components.sidebar_kasir')
+    @include('components.sidebar_pelanggan')
     <!-- Sidebar End -->
 
     <!-- Main Content Start -->
@@ -92,7 +92,7 @@
                     <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                         <i class="bi bi-list"></i>
                     </button>
-                    <h1 class="text-lg font-semibold text-slate-800">Profil Kasir</h1>
+                    <h1 class="text-lg font-semibold text-slate-800">Profil</h1>
                 </div>
                 <div class="relative">
                     {{-- Ganti bagian ini di header setiap halaman kasir --}}
@@ -131,43 +131,49 @@
 
             <div class="pb-20 pt-20 lg:pt-6 max-w-4xl mx-auto space-y-8 mt-4">
                 <section class="bg-white rounded-2xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <i class="bi bi-person-circle text-blue-600"></i> Profil Anda
-                    </h3>
-                    <div class="flex flex-col sm:flex-row items-center gap-6">
-                        @if (Auth::user()->profile_photo)
-                            <img id="profilePhoto" src="{{ asset('storage/' . Auth::user()->profile_photo) }}"
-                                alt="Foto Profil"
-                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover cursor-pointer">
-                        @else
-                            <img id="profilePhoto"
-                                src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=3b82f6&color=fff&size=128&bold=true' }}"
-                                alt="Foto Profil"
-                                class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md cursor-pointer">
-                        @endif
-                        <div class="text-center sm:text-left">
-                            <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
-                            <p class="text-slate-500 mt-1">Role: {{ ucfirst(Auth::user()->usertype) }}</p>
-                            <button id="openProfileModalBtn"
-                                class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                                <i class="bi bi-pencil-square mr-2"></i>Edit Profil
-                            </button>
-                        </div>
-                    </div>
-                </section>
+                            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="bi bi-person-circle text-teal-500"></i> Profil Anda</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-6">
+                                <img src="{{ Auth::user()->profile_photo ? asset('storage/' . Auth::user()->profile_photo) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=14b8a6&color=fff&size=128&bold=true' }}" alt="Foto Profil" class="w-24 h-24 rounded-full border-4 border-teal-400 shadow-md object-cover">
+                                <div class="text-center sm:text-left flex-1">
+                                    <strong class="text-2xl font-bold text-slate-900">{{ Auth::user()->name }}</strong>
+                                    <p class="text-slate-500 mt-1">Role: {{ ucfirst(Auth::user()->usertype) }}</p>
+                                    
+                                    {{-- [PERUBAHAN] Menambahkan info cabang yang lebih modern --}}
+                                    @if(Auth::user()->cabang)
+                                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-left">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-shop-window w-6 text-center text-teal-500"></i>
+                                                <span><strong class="font-semibold">Cabang:</strong> {{ Auth::user()->cabang->nama_cabang }}</span>
+                                            </div>
+                                            @if(Auth::user()->cabang->no_whatsapp)
+                                            <div class="flex items-center text-slate-600">
+                                                <i class="bi bi-whatsapp w-6 text-center text-teal-500"></i>
+                                                {{-- [PERUBAHAN] Menambahkan label "Nomor Cabang:" --}}
+                                                <span><strong class="font-semibold">Nomor Cabang:</strong> {{ Auth::user()->cabang->no_whatsapp }}</span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    <button id="openProfileModalBtn" class="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                                        <i class="bi bi-pencil-square mr-2"></i>Edit Profil
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
                 <section class="bg-white rounded-2xl shadow-lg p-6">
                     <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i
                             class="bi bi-question-circle text-blue-600"></i> Cara Menggunakan Aplikasi</h3>
                     <ul class="list-disc list-inside space-y-2 text-slate-600 leading-relaxed">
-                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Dashboard</strong> untuk
-                            melihat data data pesanan laundry yang sudah dibuat.</li>
-                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Pelanggan</strong> untuk
-                            melihat dan mengelola data pelanggan.</li>
-                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Buat Order</strong> untuk
-                            menambahkan pesanan laundry.</li>
-                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Data Order</strong> untuk
-                            melihat dan mengelola semua transaksi yang sudah dibuat.</li>
+                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Home</strong> untuk
+                            melihat data data pesanan yang sudah dibuat.</li>
+                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Riwayat Order</strong> untuk
+                            melihat pesanan yang sudah selesai.</li>
+                        <li>Gunakan halaman <strong class="font-semibold text-slate-700">Bantuan</strong> untuk
+                            memberitahu jika ada kendala atau masalah.</li>
                     </ul>
                 </section>
 
@@ -186,6 +192,7 @@
     <!-- End Main Content -->
 
     {{-- MODAL EDIT PROFIL --}}
+    {{-- MODAL EDIT PROFIL --}}
     <div id="profileModal"
         class="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4 hidden">
         <div id="profileModalContent"
@@ -197,7 +204,7 @@
                     class="text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
             </div>
 
-            <form id="editProfileForm" action="{{ route('kasir.pengaturan.update', $user->id) }}" method="POST"
+            <form id="editProfileForm" action="{{ route('pelanggan.pengaturan.update', $user->id) }}" method="POST"
                 enctype="multipart/form-data" class="space-y-4 pt-2">
                 @csrf
                 @method('PUT')
@@ -271,7 +278,7 @@
             <button id="closePhotoPreviewBtn"
                 class="absolute top-2 right-3 text-slate-400 hover:text-slate-800 text-3xl leading-none">&times;</button>
             @if (Auth::user()->profile_photo)
-                <img src="{{ asset('uploads/profile_photos/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
+                <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Foto Profil"
                     class="w-48 h-48 rounded-full object-cover border-4 border-teal-400 shadow-md">
             @else
                 <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&size=256&bold=true"
@@ -312,28 +319,30 @@
                 overlay.addEventListener('click', toggleSidebar);
             }
 
-            // User Dropdown Logic
+            /// Toggle user menu dropdown
             const userMenuButton = document.getElementById('user-menu-button');
             const userMenu = document.getElementById('user-menu');
-            const logoutButton = document.getElementById('logout-button');
-
-            if (userMenuButton) {
-                userMenuButton.addEventListener('click', () => {
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     userMenu.classList.toggle('hidden');
                 });
 
-                // Close dropdown if clicked outside
-                window.addEventListener('click', function(e) {
-                    if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                // Optional: close menu if click outside
+                document.addEventListener('click', function(e) {
+                    if (!userMenu.contains(e.target) && !userMenuButton.contains(e.target)) {
                         userMenu.classList.add('hidden');
                     }
                 });
             }
 
-            // Logout Confirmation
+
+
+            // Konfirmasi logout dengan SweetAlert
+            const logoutButton = document.getElementById('logout-button');
             if (logoutButton) {
                 logoutButton.addEventListener('click', (event) => {
-                    event.preventDefault();
+                    event.preventDefault(); // Mencegah form submit langsung
                     Swal.fire({
                         title: 'Anda yakin ingin logout?',
                         icon: 'warning',
@@ -349,7 +358,6 @@
                     });
                 });
             }
-
             // --- Modal Edit Profile Logic ---
             const profileModal = document.getElementById('profileModal');
             const profileModalContent = document.getElementById('profileModalContent');

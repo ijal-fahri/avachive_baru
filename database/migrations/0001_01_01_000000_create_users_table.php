@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('email')->nullable(); // <-- TAMBAHKAN BARIS INI
+            $table->timestamp('email_verified_at')->nullable(); // <-- (Opsional tapi direkomendasikan)
             $table->string('password');
             $table->string('plain_password')->nullable();
             $table->string('usertype')->default('admin'); 

@@ -96,34 +96,8 @@
 
 <body class="bg-slate-100">
     <div class="flex">
-        <aside class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
-            <div>
-                <div class="flex flex-col items-center text-center mb-10">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
-                    <div class="text-2xl font-bold text-teal-400">Avachive Owner</div>
-                </div>
-                <nav class="space-y-3">
-                    <a href="{{ route('owner.dashboard') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-grid-1x2-fill mr-4 text-lg"></i><span class="font-medium">Dashboard</span></a>
-                    <a href="{{ route('owner.manage') }}"
-                        class="flex items-center py-3 px-4 rounded-lg bg-teal-400 text-slate-900 font-semibold shadow-lg"><i
-                            class="bi bi-receipt-cutoff mr-4 text-lg"></i><span class="font-medium">Manajemen
-                            Order</span></a>
-                    <a href="{{ route('owner.laporan.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-shop-window mr-4 text-lg"></i><span class="font-medium">Data Cabang</span></a>
-                    <a href="{{ route('owner.dataadmin.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-person-badge-fill mr-4 text-lg"></i><span class="font-medium">Data
-                            Admin</span></a>
-                    <a href="{{ route('owner.datakaryawan.index') }}"
-                        class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i
-                            class="bi bi-people-fill mr-4 text-lg"></i><span class="font-medium">Data
-                            Karyawan</span></a>
-                </nav>
-            </div>
-        </aside>
+        
+        @include('owner.partials.sidebar')
 
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header
@@ -132,7 +106,6 @@
                     <h1 class="text-xl font-semibold text-slate-800">Manajemen Order</h1>
                 </div>
                 <div class="relative">
-                    {{-- GANTI BAGIAN INI --}}
                     <button id="profileDropdownBtn"
                         class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 hover:ring-2 hover:ring-teal-400 transition-all overflow-hidden">
                         @if (Auth::user()->profile_photo)
@@ -142,8 +115,6 @@
                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                         @endif
                     </button>
-                    {{-- AKHIR BAGIAN PENGGANTIAN --}}
-
                     <div id="profileDropdownMenu"
                         class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl hidden z-10 border">
                         <div class="p-2">
@@ -235,9 +206,15 @@
                             <tbody id="ordersTableBody">
                                 @forelse ($orders as $order)
                                     <tr class="hover:bg-slate-50">
-                                        <td data-label="ID Order"
-                                            class="px-6 py-4 font-bold text-slate-900 whitespace-nowrap">
-                                            #{{ $order->id }}</td>
+                                        <td data-label="ID Order" class="px-6 py-4 font-bold text-slate-900 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <span>#{{ $order->id }}</span>
+                                                {{-- [PERUBAHAN] Logika badge "BARU" ditambahkan di sini --}}
+                                                @if (isset($order->is_new) && $order->is_new)
+                                                    <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-teal-500 rounded-full animate-pulse">BARU</span>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td data-label="Pelanggan" class="px-6 py-4">
                                             {{ $order->pelanggan->nama ?? 'N/A' }}</td>
                                         <td data-label="Cabang" class="px-6 py-4 font-semibold">
@@ -300,35 +277,7 @@
             <div id="modalBody" class="space-y-3 text-sm"></div>
         </div>
     </div>
-
-    <nav
-        class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('owner.dashboard') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-grid-1x2-fill text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
-            <i class="bi bi-receipt-cutoff text-2xl"></i>
-            <span class="text-xs">Order</span>
-        </a>
-        <a href="{{ route('owner.laporan.index') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-shop-window text-2xl"></i>
-            <span class="text-xs">Cabang</span>
-        </a>
-        <a href="{{ route('owner.dataadmin.index') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-person-badge-fill text-2xl"></i>
-            <span class="text-xs">Admin</span>
-        </a>
-        <a href="{{ route('owner.datakaryawan.index') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-people-fill text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-    </nav>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- LOGIKA MODAL DETAIL ---

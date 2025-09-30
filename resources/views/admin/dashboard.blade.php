@@ -30,27 +30,8 @@
 
 <body class="bg-slate-100 text-slate-800 antialiased">
     <div class="flex h-screen bg-slate-100">
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out hidden md:flex">
-            <div class="mb-8 text-center">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-2">
-                <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
-            </div>
 
-            <nav class="flex flex-col space-y-2">
-                <a href="{{ route('dashboard') }}" class="active flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors">
-                    <i class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span>
-                </a>
-                <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-list-check text-lg"></i><span>Data Layanan</span>
-                </a>
-                <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-people text-lg"></i><span>Data Karyawan</span>
-                </a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <i class="bi bi-printer text-lg"></i><span>Laporan</span>
-                </a>
-            </nav>
-        </aside>
+        @include('admin.partials.sidebar')
 
         <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
             <main class="flex-1 overflow-y-auto">
@@ -133,7 +114,13 @@
                                 <tbody>
                                     @forelse ($pesanan_hari_ini as $order)
                                     <tr class="bg-white shadow-sm hover:shadow-md transition">
-                                        <td data-label="ID Order" class="py-4 px-4 font-semibold text-slate-700">#{{ $order->id }}</td>
+                                        {{-- [PERUBAHAN] Logika badge "BARU" ditambahkan di sini --}}
+                                        <td data-label="ID Order" class="py-4 px-4 font-semibold text-slate-700">
+                                            #{{ $order->id }}
+                                            @if (isset($order->is_new) && $order->is_new)
+                                                <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-green-500 rounded-full animate-pulse">BARU</span>
+                                            @endif
+                                        </td>
                                         <td data-label="Nama" class="py-4 px-4">{{ $order->pelanggan->nama ?? 'N/A' }}</td>
                                         <td data-label="Tgl Masuk" class="py-4 px-4">{{ \Carbon\Carbon::parse($order->created_at)->isoFormat('DD MMM YYYY') }}</td>
                                         <td data-label="Tgl Selesai" class="py-4 px-4">{{ strtotime($order->waktu_pembayaran) ? \Carbon\Carbon::parse($order->waktu_pembayaran)->isoFormat('DD MMM YYYY') : ($order->status == 'Selesai' ? \Carbon\Carbon::parse($order->updated_at)->isoFormat('DD MMM YYYY') : 'Belum Selesai') }}</td>
@@ -165,26 +152,6 @@
         </div>
     </div>
     
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('produk.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-list-check text-2xl"></i>
-            <span class="text-xs">Layanan</span>
-        </a>
-        <a href="{{ route('datauser') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-people text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-        <a href="{{ route('dataorder') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-printer text-2xl"></i>
-            <span class="text-xs">Laporan</span>
-        </a>
-    </nav>
-
-
     <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0" id="modalContent">
           <div class="flex justify-between items-center pb-3 mb-4"><h3 id="modalOrderId" class="text-xl font-bold text-slate-800">Detail Order</h3><button id="closeModalBtn" class="text-slate-500 hover:text-slate-800 text-2xl font-bold leading-none">&times;</button></div>
@@ -249,10 +216,8 @@
                     const layananItems = JSON.parse(order.layanan);
                     if (layananItems && layananItems.length > 0) {
                         layananItems.forEach(item => {
-                            // --- PERUBAHAN ADA DI SINI ---
                             const hargaFinalPerItem = item.harga || 0;
                             const kuantitas = item.kuantitas || 1;
-                            // Subtotal dihitung dari harga final (setelah diskon)
                             const subtotal = hargaFinalPerItem * kuantitas; 
                             const diskon = item.diskon || 0;
                             const hargaAsli = item.harga_asli || 0;
@@ -284,7 +249,6 @@
                                     <p class="font-semibold text-slate-800">${item.nama || 'N/A'}</p>
                                     ${detailLayananHTML}
                                 </div>`;
-                            // --- AKHIR DARI PERUBAHAN ---
                         });
                     }
                 } catch (e) { 

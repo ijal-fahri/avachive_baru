@@ -52,18 +52,7 @@
 <body class="bg-slate-100 text-slate-800 antialiased">
     <div class="relative flex h-screen bg-slate-100">
         
-        <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out hidden md:flex">
-            <div class="mb-8 text-center">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-2">
-                <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
-            </div>
-            <nav class="flex flex-col space-y-2">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span></a>
-                <a href="{{ route('produk.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-list-check text-lg"></i><span>Data Layanan</span></a>
-                <a href="{{ route('datauser') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors" aria-current="page"><i class="bi bi-people text-lg"></i><span>Data Karyawan</span></a>
-                <a href="{{ route('dataorder') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i class="bi bi-printer text-lg"></i><span>Laporan</span></a>
-            </nav>
-        </aside>
+        @include('admin.partials.sidebar')
 
         <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
             <main class="flex-1 overflow-y-auto">
@@ -136,25 +125,6 @@
         </div>
     </div>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('produk.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-list-check text-2xl"></i>
-            <span class="text-xs">Layanan</span>
-        </a>
-        <a href="{{ route('datauser') }}" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
-            <i class="bi bi-people text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-        <a href="{{ route('dataorder') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-printer text-2xl"></i>
-            <span class="text-xs">Laporan</span>
-        </a>
-    </nav>
-
     <div id="userModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-center p-4">
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg relative animate-modal-in">
             <button class="close-modal-btn absolute top-4 right-4 text-3xl text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
@@ -163,7 +133,6 @@
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
                 <div class="space-y-4">
-                    
                     <div>
                         <label class="block mb-2 text-sm font-medium text-slate-700">Foto Profil</label>
                         <div class="flex items-center gap-4">
@@ -175,7 +144,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div>
                         <label for="name" class="block mb-1 text-sm font-medium text-slate-700">Nama</label>
                         <input type="text" name="name" id="name" required class="form-input">
@@ -191,6 +159,7 @@
                             <option value="driver">Driver</option>
                         </select>
                     </div>
+                    {{-- [PERBAIKAN] Dropdown cabang dihapus dari modal Admin --}}
                 </div>
                 <div class="flex justify-end gap-4 mt-8">
                     <button type="button" class="cancel-btn px-6 py-2.5 text-sm font-semibold rounded-lg bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition active:scale-95">Batal</button>
@@ -230,6 +199,9 @@
 
     <script>
     $(document).ready(function() {
+        // [PERBAIKAN] Ambil variabel 'lastVisit' dari controller
+        const lastVisitTime = @json($lastVisit ?? null);
+
         let table = $('#userTable').DataTable({
             dom: '<"dt-controls-row"<"dt-length"l><"dt-search"f>>t<"dt-bottom-row"<"dt-info"i><"dt-paging"p>>',
             processing: true,
@@ -239,29 +211,35 @@
                 url: "{{ route('karyawan.data') }}",
                 type: 'POST',
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                data: d => { d.role = $('#role-filter input[name="role"]:checked').val(); }
+                data: d => { 
+                    d.role = $('#role-filter input[name="role"]:checked').val();
+                    // [PERBAIKAN] Kirim 'lastVisitTime' ke controller
+                    d.last_visit = lastVisitTime;
+                }
             },
             columns: [
                 { data: 'no', name: 'no', orderable: false, searchable: false },
                 { 
-                    data: 'profile_photo', 
-                    name: 'foto', 
-                    orderable: false, 
-                    searchable: false,
+                    data: 'profile_photo', name: 'foto', orderable: false, searchable: false,
                     render: function(data, type, row) {
                         const photoUrl = data ? `{{ asset('storage') }}/${data}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name)}&background=14b8a6&color=fff&size=40`;
                         return `<img src="${photoUrl}" alt="${row.name}" class="w-10 h-10 rounded-full object-cover">`;
                     }
                 },
-                { data: 'name', name: 'name', className: 'font-semibold' },
+                { 
+                    data: 'name', name: 'name', className: 'font-semibold',
+                    render: function(data, type, row) {
+                        let badge = '';
+                        if (row.is_new) {
+                            badge = ' <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-green-500 rounded-full animate-pulse">BARU</span>';
+                        }
+                        return data + badge;
+                    }
+                },
                 { data: 'usertype', name: 'usertype', className: 'capitalize' },
                 { data: 'plain_password', name: 'plain_password' },
                 { 
-                    data: 'id',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center',
+                    data: 'id', name: 'action', orderable: false, searchable: false, className: 'text-center',
                     render: function(data, type, row) {
                         return `
                             <div class="flex gap-2 justify-center">
@@ -280,7 +258,14 @@
                     }
                 }
             ],
-            language: { /* ... Bahasa ... */ }
+            language: { 
+                search: "", searchPlaceholder: "Cari...", lengthMenu: "Tampil _MENU_ entri",
+                emptyTable: `<div class="text-center p-10"><i class="bi bi-person-x text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Belum Ada Karyawan</h4><p class="text-slate-500">Gunakan tombol 'Tambah Karyawan' untuk membuat data baru.</p></div>`,
+                zeroRecords: `<div class="text-center p-10"><i class="bi bi-search text-5xl text-slate-300 mb-4 block"></i><h4 class="font-semibold text-xl text-slate-700">Karyawan Tidak Ditemukan</h4><p class="text-slate-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p></div>`,
+                info: "Menampilkan _START_ - _END_ dari _TOTAL_ entri", infoEmpty: "Menampilkan 0 entri", infoFiltered: "(disaring dari _MAX_ total entri)",
+                paginate: { next: ">", previous: "<" },
+                processing: '<div class="flex items-center gap-2 text-slate-600"><svg class="animate-spin h-5 w-5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Memuat Data...</span></div>',
+             }
         });
 
         $('#role-filter input[name="role"]').on('change', () => table.ajax.reload());
@@ -369,3 +354,4 @@
     </script>
 </body>
 </html>
+

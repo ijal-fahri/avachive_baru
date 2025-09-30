@@ -79,11 +79,11 @@
 
                         <div x-show="open" x-transition class="ml-8 mt-1 space-y-1">
                             <a href="../kasir/data_order"
-                                class="flex items-center px-4 py-2 text-sm text-[#dcdde1] hover:bg-teal-400 hover:text-white rounded-lg transition-all duration-200 group {{ request()->is('kasir/data_order*') ? 'bg-teal-400 text-white' : '' }}">
+                                class="flex items-center px-4 py-3 text-[#dcdde1] hover:bg-teal-400 hover:text-slate-900 rounded-lg transition-all duration-200 group {{ request()->is('kasir/data_order*') ? 'bg-teal-400 text-slate-900' : '' }}">
                                 List Order
                             </a>
                             <a href="../kasir/riwayat_order"
-                                class="flex items-center px-4 py-2 text-sm text-[#dcdde1] hover:bg-teal-400 hover:text-white rounded-lg transition-all duration-200 group {{ request()->is('kasir/riwayat_order*') ? 'bg-teal-400 text-white' : '' }}">
+                                class="flex items-center px-4 py-3 text-[#dcdde1] hover:bg-teal-400 hover:text-slate-900 rounded-lg transition-all duration-200 group {{ request()->is('kasir/riwayat_order*') ? 'bg-teal-400 text-slate-900' : '' }}">
                                 Riwayat Order
                             </a>
                         </div>

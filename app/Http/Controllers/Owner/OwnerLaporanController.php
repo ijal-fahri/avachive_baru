@@ -6,28 +6,53 @@ use App\Http\Controllers\Controller;
 use App\Models\BuatOrder;
 use App\Models\Cabang;
 use App\Models\TambahPelanggan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class OwnerLaporanController extends Controller
 {
     public function index(Request $request)
     {
-        // --- 1. PENGAMBILAN DATA & FILTER ---
+        // [LOGIKA NOTIFIKASI SIDEBAR]
+        $lastOrderCheck = session('last_order_check');
+        $activeOrderQuery = BuatOrder::whereIn('status', ['Baru', 'Diproses']);
+        if ($lastOrderCheck) {
+            $activeOrderQuery->where('created_at', '>', $lastOrderCheck);
+        }
+        $activeOrderNotificationCount = $activeOrderQuery->count();
+
+        $lastCabangCheck = session('last_cabang_check');
+        $completedOrderQuery = BuatOrder::where('status', 'Selesai');
+        if ($lastCabangCheck) {
+            $completedOrderQuery->where('updated_at', '>', $lastCabangCheck);
+        }
+        $completedOrderNotificationCount = $completedOrderQuery->count();
+        
+        $dashboardNotificationCount = $activeOrderNotificationCount + $completedOrderNotificationCount;
+
+        $lastKaryawanCheck = session('last_karyawan_check');
+        $karyawanQuery = User::whereIn('usertype', ['kasir', 'driver']);
+        if ($lastKaryawanCheck) {
+            $karyawanQuery->where('created_at', '>', $lastKaryawanCheck);
+        }
+        $karyawanNotificationCount = $karyawanQuery->count();
+        
+        // Reset notifikasi badge tabel dengan mencatat waktu SEKARANG.
+        session(['last_cabang_check' => now()]);
+
+
+        // --- PENGAMBILAN DATA & FILTER LAPORAN ---
         $cabangs = Cabang::orderBy('nama_cabang')->get();
         $selectedCabang = $request->input('cabang_id', 'semua');
         $selectedPeriode = $request->input('periode', 'bulan_ini');
 
-        // Query dasar untuk order dengan relasi yang dibutuhkan
         $ordersQuery = BuatOrder::with(['pelanggan', 'cabang']);
 
-        // Filter berdasarkan cabang
         if ($selectedCabang && $selectedCabang !== 'semua') {
             $ordersQuery->where('cabang_id', $selectedCabang);
         }
 
-        // Filter berdasarkan periode waktu
         $startDate = now()->startOfDay();
         $endDate = now()->endOfDay();
 
@@ -39,48 +64,59 @@ class OwnerLaporanController extends Controller
         
         $ordersQuery->whereBetween('created_at', [$startDate, $endDate]);
         
-        // Ambil semua order yang sudah difilter
         $filteredOrders = $ordersQuery->get();
 
-        // --- 2. PENGOLAHAN DATA STATISTIK ---
+        // Tambahkan penanda 'is_new' untuk badge di tabel
+        $filteredOrders->transform(function ($order) use ($lastCabangCheck) {
+            if ($lastCabangCheck && $order->status === 'Selesai') {
+                $order->is_new = Carbon::parse($order->updated_at)->isAfter(Carbon::parse($lastCabangCheck));
+            } else {
+                $order->is_new = !$lastCabangCheck && $order->status === 'Selesai';
+            }
+            return $order;
+        });
+
+        // --- PENGOLAHAN DATA STATISTIK ---
         $totalPendapatan = $filteredOrders->sum('total_harga');
         $jumlahTransaksi = $filteredOrders->count();
         $orderSelesai = $filteredOrders->where('status', 'Selesai')->count();
         
-        // Statistik pelanggan baru berdasarkan filter
         $pelangganBaruQuery = TambahPelanggan::whereBetween('created_at', [$startDate, $endDate]);
         if ($selectedCabang && $selectedCabang !== 'semua') {
             $pelangganBaruQuery->where('cabang_id', $selectedCabang);
         }
         $pelangganBaru = $pelangganBaruQuery->count();
 
-        // Statistik pemasukan tertinggi & terendah
-        $pemasukanTertinggi = $filteredOrders->max('total_harga') ?? 0;
-        $pemasukanTerendah = $filteredOrders->min('total_harga') ?? 0;
+        // [LOGIKA DIPERBARUI] Menentukan nama cabang dengan pemasukan tertinggi & terendah
+        $pendapatanPerCabang = $filteredOrders
+            ->where('cabang.nama_cabang', '!=', null)
+            ->groupBy('cabang.nama_cabang')
+            ->map(fn ($orders) => $orders->sum('total_harga'))
+            ->sortDesc();
 
+        $pemasukanTertinggi = $pendapatanPerCabang->keys()->first() ?? '-';
+        $pemasukanTerendah = $pendapatanPerCabang->keys()->last() ?? '-';
 
-        // --- 3. PENGOLAHAN DATA UNTUK GRAFIK (BAGIAN PENTING) ---
-        
-        // Inisialisasi data untuk grafik
+        if ($pendapatanPerCabang->count() <= 1) {
+            $pemasukanTerendah = '-';
+        }
+
+        // --- PENGOLAHAN DATA UNTUK GRAFIK ---
         $revenueTrend = [];
         $layananCounts = [];
 
-        // Inisialisasi tren pendapatan dengan nilai 0 untuk setiap hari dalam periode
         $currentDate = $startDate->copy();
         while ($currentDate <= $endDate) {
             $revenueTrend[$currentDate->format('Y-m-d')] = 0;
             $currentDate->addDay();
         }
 
-        // Loop melalui setiap order untuk mengisi data grafik
         foreach ($filteredOrders as $order) {
-            // Mengisi data tren pendapatan
             $orderDate = Carbon::parse($order->created_at)->format('Y-m-d');
             if (isset($revenueTrend[$orderDate])) {
                 $revenueTrend[$orderDate] += $order->total_harga;
             }
 
-            // Mengisi data layanan terlaris dengan "membongkar" JSON
             $layananItems = json_decode($order->layanan, true);
             if (is_array($layananItems)) {
                 foreach ($layananItems as $item) {
@@ -96,26 +132,14 @@ class OwnerLaporanController extends Controller
             }
         }
         
-        // Urutkan layanan terlaris dari yang paling banyak
         arsort($layananCounts);
-        $layananTerlaris = array_slice($layananCounts, 0, 5); // Ambil 5 teratas
-
-        // Mengambil 5 transaksi terbaru untuk ditampilkan di tabel
+        $layananTerlaris = array_slice($layananCounts, 0, 5);
         $transaksiTerbaru = $filteredOrders->sortByDesc('created_at')->take(10);
 
         return view('owner.laporan.index', compact(
-            'cabangs',
-            'selectedCabang',
-            'selectedPeriode',
-            'totalPendapatan',
-            'jumlahTransaksi',
-            'orderSelesai',
-            'pelangganBaru',
-            'pemasukanTertinggi',
-            'pemasukanTerendah',
-            'revenueTrend',
-            'layananTerlaris',
-            'transaksiTerbaru'
+            'cabangs', 'selectedCabang', 'selectedPeriode', 'totalPendapatan', 'jumlahTransaksi', 'orderSelesai', 'pelangganBaru', 'pemasukanTertinggi', 'pemasukanTerendah', 'revenueTrend', 'layananTerlaris', 'transaksiTerbaru',
+            // Kirim semua variabel notifikasi ke view
+            'dashboardNotificationCount', 'activeOrderNotificationCount', 'completedOrderNotificationCount', 'karyawanNotificationCount'
         ));
     }
 }

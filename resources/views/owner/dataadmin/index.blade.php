@@ -52,22 +52,9 @@
 </head>
 <body class="bg-slate-100">
     <div class="flex">
-        <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 min-h-screen p-4 fixed z-40 flex-col hidden md:flex">
-            <div>
-                <div class="flex flex-col items-center text-center mb-10">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo Avachive" class="w-16 h-auto mb-2">
-                    <div class="text-2xl font-bold text-teal-400">Avachive Owner</div>
-                </div>
-                
-                <nav class="space-y-3">
-                    <a href="{{ route('owner.dashboard') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-grid-1x2-fill mr-4 text-lg"></i><span class="font-medium">Dashboard</span></a>
-                    <a href="{{ route('owner.manage') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-receipt-cutoff mr-4 text-lg"></i><span class="font-medium">Manajemen Order</span></a>
-                    <a href="{{ route('owner.laporan.index') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-shop-window mr-4 text-lg"></i><span class="font-medium">Data Cabang</span></a>
-                    <a href="{{ route('owner.dataadmin.index') }}" class="flex items-center py-3 px-4 rounded-lg bg-teal-400 text-slate-900 font-semibold shadow-lg"><i class="bi bi-person-badge-fill mr-4 text-lg"></i><span class="font-medium">Data Admin</span></a>
-                    <a href="{{ route('owner.datakaryawan.index') }}" class="flex items-center py-3 px-4 rounded-lg hover:bg-slate-800 hover:text-white transition-colors duration-200"><i class="bi bi-people-fill mr-4 text-lg"></i><span class="font-medium">Data Karyawan</span></a>
-                </nav>
-            </div>
-        </aside>
+        
+        {{-- Memanggil sidebar terpusat (yang sudah berisi navigasi desktop & mobile) --}}
+        @include('owner.partials.sidebar')
 
         <div class="flex-1 md:ml-64 h-screen overflow-y-auto">
             <header class="bg-white/80 backdrop-blur-sm p-4 flex justify-between items-center sticky top-4 z-20 mx-4 md:mx-6 rounded-2xl shadow-lg">
@@ -192,30 +179,7 @@
         </div>
     </div>
 
-    {{-- BOTTOM NAVIGATION (Mobile Only) --}}
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('owner.dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-grid-1x2-fill text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('owner.manage') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-receipt-cutoff text-2xl"></i>
-            <span class="text-xs">Order</span>
-        </a>
-        <a href="{{ route('owner.laporan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-shop-window text-2xl"></i>
-            <span class="text-xs">Cabang</span>
-        </a>
-        <a href="{{ route('owner.dataadmin.index') }}" class="flex flex-col items-center gap-1 text-teal-400 font-semibold">
-            <i class="bi bi-person-badge-fill text-2xl"></i>
-            <span class="text-xs">Admin</span>
-        </a>
-        <a href="{{ route('owner.datakaryawan.index') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-400 transition-colors">
-            <i class="bi bi-people-fill text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-    </nav>
-
+    {{-- Navigasi mobile yang lama sudah dihapus dari sini --}}
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -327,7 +291,6 @@
         
         $('#adminTable tbody').on('click', '.btn-edit', function() {
             const adminId = $(this).data('id');
-            // Fetch data dari server untuk memastikan data terbaru (termasuk foto)
             fetch(`{{ url('owner/dataadmin') }}/${adminId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -361,7 +324,6 @@
         
         $('#cabangFilter').on('change', () => adminTable.ajax.reload());
 
-        // --- Image Preview Logic ---
         profilePhotoInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
@@ -369,7 +331,6 @@
             }
         });
         
-        // --- UI Scripts ---
         const profileDropdownBtn = document.getElementById('profileDropdownBtn');
         const profileDropdownMenu = document.getElementById('profileDropdownMenu');
         profileDropdownBtn.addEventListener('click', () => profileDropdownMenu.classList.toggle('hidden'));
@@ -399,13 +360,11 @@
                 html: `<ul class="mt-2 list-disc list-inside text-sm text-left">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>`,
                 confirmButtonColor: '#14b8a6'
             });
-            // Buka kembali modal dengan data lama jika ada error
             @if(session('error_modal_type') === 'edit')
                 fetch(`{{ url('owner/dataadmin') }}/{{ session('error_id') }}`)
                     .then(res => res.json())
                     .then(data => {
                         openModal('edit', data);
-                        // Isi kembali dengan old input
                         $('#name').val("{{ old('name') }}");
                         $('#cabang_id_modal').val("{{ old('cabang_id') }}");
                     });
@@ -419,3 +378,4 @@
     </script>
 </body>
 </html>
+

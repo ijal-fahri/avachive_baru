@@ -22,25 +22,20 @@
         body {
             font-family: 'Poppins', sans-serif;
         }
-
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #14b8a6;
             border-radius: 10px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: #0d9488;
         }
-
         .form-input,
         #layananTable_wrapper .dt-search input,
         #layananTable_wrapper .dt-length select {
@@ -56,14 +51,12 @@
             -moz-appearance: none;
             appearance: none;
         }
-
         .form-input:focus,
         #layananTable_wrapper .dt-search input:focus,
         #layananTable_wrapper .dt-length select:focus {
             border-color: #14b8a6 !important;
             box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important;
         }
-
         select.form-input,
         #layananTable_wrapper .dt-length select {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
@@ -72,22 +65,18 @@
             background-size: 1.5em 1.5em;
             padding-right: 2.5rem !important;
         }
-
         #layananTable_wrapper .dt-search input {
             border-radius: 9999px !important;
         }
-
         #layananTable_wrapper .dt-length select {
             width: auto;
         }
-
         @media (min-width: 768px) {
             #layananTable_wrapper .dt-search input {
                 min-width: 250px;
                 width: auto;
             }
         }
-
         #layananTable_wrapper .dt-controls-row,
         #layananTable_wrapper .dt-bottom-row {
             display: flex;
@@ -95,17 +84,13 @@
             gap: 1rem;
             padding: 0.5rem 0.25rem;
         }
-
         #layananTable_wrapper .dt-controls-row {
             margin-bottom: 1.5rem;
         }
-
         #layananTable_wrapper .dt-bottom-row {
             margin-top: 1.5rem;
         }
-
         @media (min-width: 768px) {
-
             #layananTable_wrapper .dt-controls-row,
             #layananTable_wrapper .dt-bottom-row {
                 flex-direction: row;
@@ -113,11 +98,9 @@
                 align-items: center;
             }
         }
-
         #layananTable {
             border-collapse: collapse;
         }
-
         #layananTable thead th {
             font-weight: 600;
             text-align: left;
@@ -127,7 +110,6 @@
             border-bottom: 2px solid #e2e8f0;
             white-space: nowrap;
         }
-
         #layananTable tbody td {
             padding: 1rem 1.25rem;
             color: #334155;
@@ -135,27 +117,22 @@
             border-bottom: 1px solid #f1f5f9;
             white-space: nowrap;
         }
-
         #layananTable tbody tr:last-child td {
             border-bottom: none;
         }
-
         #layananTable tbody tr:hover {
             background-color: #f8fafc;
         }
-
         @keyframes modal-in {
             from {
                 opacity: 0;
                 transform: translateY(-20px) scale(0.95);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
-
         .animate-modal-in {
             animation: modal-in 0.3s ease-out;
         }
@@ -165,27 +142,8 @@
 <body class="bg-slate-100 text-slate-800 antialiased">
     <div class="relative flex h-screen bg-slate-100">
 
-        <aside id="sidebar"
-            class="w-64 bg-slate-900 text-slate-300 p-4 flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out hidden md:flex">
-            <div class="mb-8 text-center">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto mx-auto mb-2">
-                <h2 class="text-2xl font-bold text-teal-400">Avachive Admin</h2>
-            </div>
-            <nav class="flex flex-col space-y-2">
-                <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i
-                        class="bi bi-speedometer2 text-lg"></i><span>Dashboard</span></a>
-                <a href="{{ route('produk.index') }}"
-                    class="flex items-center gap-3 px-4 py-3 rounded-lg text-white bg-teal-500 font-semibold transition-colors"
-                    aria-current="page"><i class="bi bi-list-check text-lg"></i><span>Data Layanan</span></a>
-                <a href="{{ route('datauser') }}"
-                    class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i
-                        class="bi bi-people text-lg"></i><span>Data Karyawan</span></a>
-                <a href="{{ route('dataorder') }}"
-                    class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"><i
-                        class="bi bi-printer text-lg"></i><span>Laporan</span></a>
-            </nav>
-        </aside>
+        {{-- [PERUBAHAN] Memanggil file partials sidebar --}}
+        @include('admin.partials.sidebar')
 
         <div class="flex-1 md:ml-64 flex flex-col overflow-hidden">
             <main class="flex-1 overflow-y-auto">
@@ -277,29 +235,6 @@
             </main>
         </div>
     </div>
-
-    <nav
-        class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-30 flex justify-around items-center px-2">
-        <a href="{{ route('dashboard') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-speedometer2 text-2xl"></i>
-            <span class="text-xs">Dashboard</span>
-        </a>
-        <a href="{{ route('produk.index') }}" class="flex flex-col items-center gap-1 text-teal-500 font-semibold">
-            <i class="bi bi-list-check text-2xl"></i>
-            <span class="text-xs">Layanan</span>
-        </a>
-        <a href="{{ route('datauser') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-people text-2xl"></i>
-            <span class="text-xs">Karyawan</span>
-        </a>
-        <a href="{{ route('dataorder') }}"
-            class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-500 transition-colors">
-            <i class="bi bi-printer text-2xl"></i>
-            <span class="text-xs">Laporan</span>
-        </a>
-    </nav>
 
     <div id="formModal"
         class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex justify-center items-center p-4">

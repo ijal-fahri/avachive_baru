@@ -56,8 +56,8 @@ class KasirBuatOrderController extends Controller
             'sisa_harga' => $request->input('remaining_amount', $validatedData['total_harga']),
             'uang_diberikan' => $request->input('uang_diberikan', 0),
             'kembalian' => $request->input('kembalian', 0),
-            'cabang_id' => Auth::user()->cabang_id, // Tambahkan cabang_id
-            'status' => 'Diproses', // Status default
+            'cabang_id' => Auth::user()->cabang_id, // <-- Sudah benar, ambil dari kasir yang login
+            'status' => 'Diproses',
         ];
 
         // Simpan data order baru

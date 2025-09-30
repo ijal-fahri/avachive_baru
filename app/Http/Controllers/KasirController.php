@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\BuatOrder;
 use App\Models\TambahPelanggan;
 use App\Models\Layanan;
-use Illuminate\Support\Facades\Auth; // <-- Diperlukan untuk mengambil data user
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 
@@ -17,7 +17,6 @@ class KasirController extends Controller
      */
     public function index()
     {
-        // 1. Dapatkan ID cabang dari kasir yang sedang login
         $cabangId = Auth::user()->cabang_id;
 
         // Keamanan: Jika kasir tidak terhubung ke cabang, logout
@@ -26,7 +25,26 @@ class KasirController extends Controller
             return redirect('/login')->with('error', 'Akun Anda tidak terhubung ke cabang manapun.');
         }
 
-        // 2. Ambil semua data statistik HANYA dari cabang ini
+        // --- Notifikasi layanan baru di dashboard kasir ---
+        $dashboardServiceSessionKey = 'last_dashboard_service_check_kasir_' . $cabangId;
+        $now = now();
+
+        // Ambil waktu terakhir dashboard dibuka dari session
+        $lastCheck = session($dashboardServiceSessionKey);
+
+        if ($lastCheck) {
+            // Hitung layanan baru sejak terakhir dashboard dibuka
+            $dashboardNewServiceCount = Layanan::where('cabang_id', $cabangId)
+                ->where('created_at', '>', $lastCheck)
+                ->count();
+        } else {
+            // Jika belum pernah buka dashboard, hitung semua layanan
+            $dashboardNewServiceCount = Layanan::where('cabang_id', $cabangId)->count();
+        }
+
+        // JANGAN update session di sini!
+
+        // Statistik dashboard
         $todayRevenue = BuatOrder::where('cabang_id', $cabangId)->whereDate('created_at', today())->sum('total_harga');
         $todayOrders = BuatOrder::where('cabang_id', $cabangId)->whereDate('created_at', today())->count();
         $monthOrders = BuatOrder::where('cabang_id', $cabangId)->whereMonth('created_at', now()->month)->count();
@@ -36,10 +54,11 @@ class KasirController extends Controller
         $totalCustomers = TambahPelanggan::where('cabang_id', $cabangId)->count();
         $layanans = Layanan::where('cabang_id', $cabangId)->get();
 
-        // 3. Kirim data yang sudah terfilter ke view
         return view('kasir.dashboard', compact(
             'todayRevenue', 'todayOrders', 'monthOrders', 'newCustomers',
-            'totalServices', 'totalOrders', 'totalCustomers', 'layanans' 
+            'totalServices', 'totalOrders', 'totalCustomers', 'layanans',
+            'dashboardNewServiceCount', // <-- untuk notifikasi badge
+            'lastCheck' // <-- untuk filter layanan baru di modal
         ));
     }
 
@@ -60,10 +79,8 @@ class KasirController extends Controller
         return $pdf->stream('riwayat-order-'.$order->id.'.pdf');
     }
 
-    /**
-     * Menyimpan pelanggan baru dan mengaitkannya dengan cabang si kasir.
-     * Catatan: Idealnya fungsi ini berada di KasirPelangganController.
-     */
+    // HAPUS FUNGSI DI BAWAH INI
+    /*
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -87,5 +104,17 @@ class KasirController extends Controller
         TambahPelanggan::create($validatedData);
 
         return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil ditambahkan!');
+    }
+    */
+
+    /**
+     * Menandai bahwa layanan baru telah dilihat oleh kasir.
+     */
+    public function layananBaruSeen(Request $request)
+    {
+        $cabangId = Auth::user()->cabang_id;
+        $dashboardServiceSessionKey = 'last_dashboard_service_check_kasir_' . $cabangId;
+        session([$dashboardServiceSessionKey => now()]);
+        return response()->json(['success' => true]);
     }
 }

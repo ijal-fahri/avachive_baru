@@ -111,7 +111,7 @@
                 <td style="border:none;"><b>Nota Order :</b></td>
                 <td style="border:none;" class="highlight">{{ $order->id }}</td>
                 <td style="border:none;"><b>Tanggal:</b></td>
-                <td style="border:none;">{{ $order->created_at->format('d-m-Y H:i') }}</td>
+                <td style="border:none;">{{ $order->updated_at->format('d/m/Y') }}</td>
             </tr>
             <tr>
                 <td style="border:none;"><b>Pelanggan:</b></td>

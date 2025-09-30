@@ -5,33 +5,44 @@ namespace App\Http\Controllers;
 use App\Models\BuatOrder;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth; // <-- Diperlukan untuk mengambil data user
+use Illuminate\Support\Facades\Auth;
 
 class DriverController extends Controller
 {
     public function index()
     {
-        // 1. Dapatkan ID cabang dari driver yang sedang login
         $cabangId = Auth::user()->cabang_id;
         
-        // Keamanan: Jika driver tidak terhubung ke cabang, logout
         if (!$cabangId) {
             Auth::logout();
             return redirect('/login')->with('error', 'Akun Anda tidak terhubung ke cabang manapun.');
         }
 
-        $today = Carbon::today();
+        // [LOGIKA BARU] 1. Ambil waktu kunjungan terakhir SEBELUM di-reset.
+        $lastVisit = session('last_driver_dashboard_check');
 
-        // 2. Ambil semua order HANYA dari cabang ini
+        // [LOGIKA RESET] 2. Reset notifikasi dengan mencatat waktu SEKARANG.
+        session(['last_driver_dashboard_check' => now()]);
+
+        // 3. Ambil semua order yang relevan untuk driver
         $orders = BuatOrder::with('pelanggan')
-            ->where('cabang_id', $cabangId) // <-- FILTER KUNCI DI SINI
+            ->where('cabang_id', $cabangId)
             ->where('metode_pengambilan', 'Diantar')
-            ->whereDate('created_at', $today)
             ->whereIn('status', ['Sudah Bisa Diambil', 'Selesai'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($order) use ($lastVisit) {
+                // [LOGIKA BARU] 4. Tandai sebagai 'baru' jika diupdate setelah kunjungan terakhir
+                if ($lastVisit) {
+                    $order->is_new = Carbon::parse($order->updated_at)->isAfter(Carbon::parse($lastVisit));
+                } else {
+                    // Jika ini kunjungan pertama (setelah session hilang), anggap semua yang 'Siap Diambil' adalah baru
+                    $order->is_new = ($order->status === 'Sudah Bisa Diambil');
+                }
+                return $order;
+            });
 
-        // Hitung jumlah order
+        // Hitungan di bawah ini sudah benar sesuai logika di atas.
         $countTotal = $orders->count();
         $countSudah = $orders->where('status', 'Selesai')->count();
         $countBelum = $orders->where('status', 'Sudah Bisa Diambil')->count();
@@ -46,13 +57,12 @@ class DriverController extends Controller
         ));
     }
 
-    // Method untuk menyelesaikan order
+    // Method untuk menyelesaikan order (tidak diubah)
     public function orderSelesai($id, Request $request)
     {
         try {
             $order = BuatOrder::findOrFail($id);
 
-            // Keamanan: Pastikan driver hanya bisa mengubah order dari cabangnya
             if ($order->cabang_id != Auth::user()->cabang_id) {
                 abort(403, 'AKSES DITOLAK');
             }
@@ -73,39 +83,28 @@ class DriverController extends Controller
         }
     }
 
-    // Method untuk melunaskan pembayaran
+    // Method untuk melunaskan pembayaran (tidak diubah)
     public function lunaskanPembayaran($id, Request $request)
     {
         try {
             $order = BuatOrder::findOrFail($id);
             
-            // Keamanan: Pastikan driver hanya bisa mengubah order dari cabangnya
             if ($order->cabang_id != Auth::user()->cabang_id) {
                 abort(403, 'AKSES DITOLAK');
             }
 
-            // Pastikan order belum lunas
             if ($order->sisa_harga <= 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Order sudah lunas'
-                ], 400);
+                return response()->json(['success' => false, 'message' => 'Order sudah lunas'], 400);
             }
             
-            // Lunaskan pembayaran
             $order->sisa_harga = 0;
-            $order->metode_pembayaran = 'Tunai'; // Atau sesuai input dari driver
+            $order->metode_pembayaran = 'Tunai';
             $order->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran berhasil dilunaskan'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Pembayaran berhasil dilunaskan']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal melunaskan pembayaran: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal melunaskan pembayaran: ' . $e->getMessage()], 500);
         }
     }
 }
+

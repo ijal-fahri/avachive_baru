@@ -5,87 +5,83 @@ namespace App\Http\Controllers\kasir;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TambahPelanggan;
-use Illuminate\Support\Facades\Auth; // <-- DITAMBAHKAN
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 class KasirPelangganController extends Controller
 {
-    /**
-     * Menampilkan daftar pelanggan sesuai cabang kasir.
-     */
     public function index(Request $request)
     {
-        // Ambil ID cabang dari kasir yang sedang login
         $cabangId = Auth::user()->cabang_id;
 
-        // DIUBAH: Mulai query dengan filter cabang terlebih dahulu
-        $query = TambahPelanggan::where('cabang_id', $cabangId);
+        // Pastikan relasi user di-load
+        $query = TambahPelanggan::with('user')->where('cabang_id', $cabangId);
 
-       // Search
-    if ($request->filled('search')) {
-        $search = $request->input('search');
-        $query->where(function ($q) use ($search) {
-            $q->where('nama', 'like', "%{$search}%")
-                ->orWhere('no_handphone', 'like', "%{$search}%")
-                ->orWhere('provinsi', 'like', "%{$search}%")
-                ->orWhere('kota', 'like', "%{$search}%")
-                ->orWhere('kecamatan', 'like', "%{$search}%")
-                ->orWhere('kodepos', 'like', "%{$search}%")
-                ->orWhere('detail_alamat', 'like', "%{$search}%");
-        });
-    }
-
-    // Sort
-    if ($request->filled('sort')) {
-        switch ($request->input('sort')) {
-            case 'nama_asc':
-                $query->orderBy('nama', 'asc');
-                break;
-            case 'nama_desc':
-                $query->orderBy('nama', 'desc');
-                break;
-            case 'terbaru':
-                $query->orderBy('created_at', 'desc');
-                break;
-            case 'terlama':
-                $query->orderBy('created_at', 'asc');
-                break;
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('no_handphone', 'like', "%{$search}%")
+                    ->orWhere('provinsi', 'like', "%{$search}%")
+                    ->orWhere('kota', 'like', "%{$search}%")
+                    ->orWhere('kecamatan', 'like', "%{$search}%")
+                    ->orWhere('kodepos', 'like', "%{$search}%")
+                    ->orWhere('detail_alamat', 'like', "%{$search}%");
+            });
         }
-    } else {
-        $query->orderBy('created_at', 'desc');
+
+        // Sort
+        if ($request->filled('sort')) {
+            switch ($request->input('sort')) {
+                case 'nama_asc':
+                    $query->orderBy('nama', 'asc');
+                    break;
+                case 'nama_desc':
+                    $query->orderBy('nama', 'desc');
+                    break;
+                case 'terbaru':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'terlama':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Pagination
+        $perPage = $request->input('perPage', 10);
+
+        if ($perPage === 'all') {
+            $pelanggans = $query->get();
+            $pelanggans = new \Illuminate\Pagination\LengthAwarePaginator(
+                $pelanggans,
+                $pelanggans->count(),
+                $pelanggans->count() > 0 ? $pelanggans->count() : 1,
+                1,
+                [
+                    'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                    'pageName' => 'page',
+                ]
+            );
+        } else {
+            $pelanggans = $query->paginate($perPage)->withQueryString();
+        }
+
+        return view('kasir.pelanggan', compact('pelanggans', 'perPage'));
     }
 
-    // Pagination
-    $perPage = $request->input('perPage', 10);
-
-    if ($perPage === 'all') {
-        $pelanggans = $query->get();
-
-        // Convert ke LengthAwarePaginator biar tidak error di view
-        $pelanggans = new \Illuminate\Pagination\LengthAwarePaginator(
-            $pelanggans,
-            $pelanggans->count(),
-            $pelanggans->count() > 0 ? $pelanggans->count() : 1, // total per page = jumlah semua data
-            1, // halaman saat ini
-            [
-                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
-                'pageName' => 'page',
-            ]
-        );
-    } else {
-        $pelanggans = $query->paginate($perPage)->withQueryString();
-    }
-
-    return view('kasir.pelanggan', compact('pelanggans', 'perPage'));
-}
-
-    /**
-     * Menyimpan pelanggan baru ke database.
-     */
     public function store(Request $request)
     {
-       $validatedData = $request->validate([
+        $validatedData = $request->validate([
             'nama' => 'required|max:255',
             'no_handphone' => 'required|max:20',
+            'email' => 'required|email|unique:users,email', // Validasi tetap di sini
             'provinsi' => 'required|string',
             'provinsi_id' => 'required|string',
             'kota' => 'required|string',
@@ -98,37 +94,46 @@ class KasirPelangganController extends Controller
             'detail_alamat' => 'required',
         ]);
 
-        // DITAMBAHKAN: Sisipkan ID cabang kasir secara otomatis
         $validatedData['cabang_id'] = Auth::user()->cabang_id;
+
+        // Buat user baru untuk pelanggan
+        $password = '12345678'; // Default password
+        $user = User::create([
+            'name' => $validatedData['nama'],
+            'email' => $validatedData['email'],
+            'password' => bcrypt($password),
+            'plain_password' => $password,
+            'usertype' => 'pelanggan',
+            'cabang_id' => $validatedData['cabang_id'],
+        ]);
+
+        // Tambahkan relasi user_id ke pelanggan
+        $validatedData['user_id'] = $user->id;
 
         TambahPelanggan::create($validatedData);
 
-        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil ditambahkan!');
+        // Kirim email ke pelanggan
+        Mail::to($user->email)->send(new \App\Mail\PelangganAccountMail($user, $password));
+
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil ditambahkan & info login dikirim ke email!');
     }
 
-    /**
-     * Mengambil data pelanggan untuk form edit.
-     */
     public function edit(string $id)
     {
-        // DITAMBAHKAN: Pengecekan keamanan
-        $pelanggan = TambahPelanggan::where('id', $id)
-                                    ->where('cabang_id', Auth::user()->cabang_id)
-                                    ->firstOrFail(); // Akan error jika pelanggan tidak ditemukan di cabang ini
+        $pelanggan = TambahPelanggan::with('user')
+            ->where('id', $id)
+            ->where('cabang_id', Auth::user()->cabang_id)
+            ->firstOrFail();
         return response()->json($pelanggan);
     }
 
-    /**
-     * Memperbarui data pelanggan.
-     */
     public function update(Request $request, string $id)
     {
-        // DITAMBAHKAN: Pengecekan keamanan
         $pelanggan = TambahPelanggan::where('id', $id)
-                                    ->where('cabang_id', Auth::user()->cabang_id)
-                                    ->firstOrFail();
+            ->where('cabang_id', Auth::user()->cabang_id)
+            ->firstOrFail();
 
-       $validatedData = $request->validate([
+        $validatedData = $request->validate([
             'nama' => 'required|max:255',
             'no_handphone' => 'required|max:20',
             'provinsi' => 'required|string',
@@ -148,18 +153,27 @@ class KasirPelangganController extends Controller
         return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diupdate!');
     }
 
-    /**
-     * Menghapus data pelanggan.
-     */
-    public function destroy(string $id)
+   public function destroy(string $id)
     {
-        // DITAMBAHKAN: Pengecekan keamanan
-        $pelanggan = TambahPelanggan::where('id', $id)
-                                    ->where('cabang_id', Auth::user()->cabang_id)
-                                    ->firstOrFail();
-        
-        $pelanggan->delete();
+        // 2. Gunakan transaction untuk memastikan keduanya terhapus atau tidak sama sekali
+        DB::transaction(function () use ($id) {
+            $pelanggan = TambahPelanggan::with('user') // Eager load relasi user
+                ->where('id', $id)
+                ->where('cabang_id', Auth::user()->cabang_id)
+                ->firstOrFail();
+            
+            // 3. Ambil data user yang berelasi SEBELUM pelanggan dihapus
+            $user = $pelanggan->user;
+            
+            // 4. Hapus data pelanggan dari tabel 'tambah_pelanggans'
+            $pelanggan->delete();
+    
+            // 5. JIKA ada user yang terhubung, hapus juga user tersebut
+            if ($user) {
+                $user->delete();
+            }
+        });
 
-        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil dihapus!');
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan & akun login berhasil dihapus!');
     }
 }

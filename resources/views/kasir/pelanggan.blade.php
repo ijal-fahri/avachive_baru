@@ -335,7 +335,8 @@
                 <button id="hamburgerBtn" class="md:hidden text-2xl text-slate-700">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="text-lg font-semibold text-slate-800">Daftar Pelanggan</h1>
+                <h1 class="text-lg font-semibold text-slate-800">Pelanggan Kasir Cabang
+                    {{ Auth::user()->cabang->nama_cabang ?? 'Tidak Diketahui' }} </h1>
             </div>
             <div class="relative">
                 {{-- ...existing code... --}}
@@ -459,7 +460,8 @@
                                         data-kota="{{ $pelanggan->kota }}"
                                         data-kecamatan="{{ $pelanggan->kecamatan }}"
                                         data-desa="{{ $pelanggan->desa }}" data-kodepos="{{ $pelanggan->kodepos }}"
-                                        data-alamat="{{ $pelanggan->detail_alamat }}">
+                                        data-alamat="{{ $pelanggan->detail_alamat }}" {{-- 1. KIRIM DATA PASSWORD KE TOMBOL --}}
+                                        data-password="{{ $pelanggan->user?->plain_password ?? 'N/A' }}">
                                         <i class="fas fa-eye"></i>
                                         <span class="hidden sm:inline">Detail</span>
                                     </button>
@@ -563,7 +565,7 @@
 
         </div>
     </div>
-<div class="pb-20"></div>
+    <div class="pb-20"></div>
     <div id="pelangganModal"
         class="hidden fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal-content">
@@ -625,6 +627,11 @@
                     <div class="mb-4">
                         <label for="kodepos" class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
                         <input type="text" name="kodepos" id="kodepos"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" name="email" id="email"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     </div>
                     <div class="mb-6">
@@ -710,6 +717,11 @@
                         <input type="text" name="kodepos" id="edit_kodepos"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
                     </div>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" name="email" id="email"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
                     <div class="mb-6">
                         <label for="edit_detail_alamat" class="block text-sm font-medium text-gray-700 mb-1">Detail
                             Alamat</label>
@@ -751,38 +763,46 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Provinsi</p>
-                            <p id="detail-provinsi" class="text-gray-900"></p>
+                    {{-- 2. TAMBAHKAN TEMPAT UNTUK MENAMPILKAN PASSWORD --}}
+                    <div class="border-t border-gray-200 pt-4">
+                        <p class="text-sm font-medium text-gray-500">Password Login</p>
+                        <p id="detail-password" class="text-red-600 font-mono font-bold text-lg"></p>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Provinsi</p>
+                                <p id="detail-provinsi" class="text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Kota/Kabupaten</p>
+                                <p id="detail-kota" class="text-gray-900"></p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Kota/Kabupaten</p>
-                            <p id="detail-kota" class="text-gray-900"></p>
+
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Kecamatan</p>
+                                <p id="detail-kecamatan" class="text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Desa/Kelurahan</p>
+                                <p id="detail-desa" class="text-gray-900"></p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Kode Pos</p>
+                                <p id="detail-kodepos" class="text-gray-900"></p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Kecamatan</p>
-                            <p id="detail-kecamatan" class="text-gray-900"></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Desa/Kelurahan</p>
-                            <p id="detail-desa" class="text-gray-900"></p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Kode Pos</p>
-                            <p id="detail-kodepos" class="text-gray-900"></p>
-                        </div>
-                    </div>
-
-                    <div>
+                    <div class="border-t border-gray-200 pt-4">
                         <p class="text-sm font-medium text-gray-500">Detail Alamat</p>
-                        <p id="detail-alamat" class="text-gray-900 mt-1 p-3 bg-gray-100 rounded-lg"></p>
+                        <p id="detail-alamat" class="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg"></p>
                     </div>
                 </div>
 
@@ -961,6 +981,10 @@
                         '-';
                     document.getElementById('detail-alamat').textContent = btn.dataset.alamat ||
                         '-';
+
+                    // 3. AMBIL DATA PASSWORD DARI TOMBOL DAN TAMPILKAN
+                    document.getElementById('detail-password').textContent = btn.dataset.password;
+
 
                     // Show modal
                     detailModal.classList.remove('hidden');

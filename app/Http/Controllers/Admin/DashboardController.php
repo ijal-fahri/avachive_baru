@@ -15,11 +15,10 @@ use Carbon\Carbon;
 class DashboardController extends Controller
 {
     /**
-     * Menampilkan dashboard yang difilter berdasarkan cabang admin.
+     * Menampilkan dashboard dan menandai data order yang baru.
      */
     public function index()
     {
-        // 1. Dapatkan ID cabang dari admin yang sedang login
         $cabangId = Auth::user()->cabang_id;
 
         if (!$cabangId) {
@@ -27,7 +26,14 @@ class DashboardController extends Controller
             return redirect('/login')->with('error', 'Akun Anda tidak terhubung ke cabang manapun.');
         }
 
-        // 2. Ambil data statistik HANYA dari cabang ini
+        // [LOGIKA BARU] 1. Ambil waktu kunjungan terakhir SEBELUM di-reset.
+        $sessionKey = 'last_dashboard_check_admin_' . $cabangId;
+        $lastVisit = session($sessionKey);
+
+        // [LOGIKA RESET NOTIFIKASI] 2. Reset notifikasi dengan mencatat waktu SEKARANG.
+        session([$sessionKey => now()]);
+
+        // --- Semua logika pengambilan data Anda di bawah ini tetap sama ---
         $pendapatan_tahun_ini = BuatOrder::where('cabang_id', $cabangId)->whereYear('created_at', now()->year)->sum('total_harga');
         $pendapatan_bulan_ini = BuatOrder::where('cabang_id', $cabangId)->whereMonth('created_at', now()->month)->sum('total_harga');
         $total_order_tahun_ini = BuatOrder::where('cabang_id', $cabangId)->whereYear('created_at', now()->year)->count();
@@ -37,14 +43,23 @@ class DashboardController extends Controller
         $order_selesai = BuatOrder::where('cabang_id', $cabangId)->where('status', 'Selesai')->count();
         $jumlah_karyawan = User::where('cabang_id', $cabangId)->whereIn('usertype', ['kasir', 'driver'])->count();
 
-        // 3. Ambil pesanan hari ini HANYA dari cabang ini
+        // [LOGIKA BARU] 3. Tambahkan penanda 'is_new' pada pesanan hari ini
         $pesanan_hari_ini = BuatOrder::with('pelanggan')
             ->where('cabang_id', $cabangId)
             ->whereDate('created_at', Carbon::today())
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($order) use ($lastVisit) {
+                // Tandai sebagai 'baru' jika diupdate setelah kunjungan terakhir, atau jika ini kunjungan pertama
+                if ($lastVisit) {
+                    $order->is_new = Carbon::parse($order->updated_at)->isAfter(Carbon::parse($lastVisit));
+                } else {
+                    $order->is_new = true; // Anggap semua baru jika belum pernah berkunjung
+                }
+                return $order;
+            });
 
-        // 4. Data untuk chart order bulanan HANYA dari cabang ini
+        // Data chart (tidak diubah)
         $chartData = BuatOrder::select(DB::raw('MONTH(created_at) as bulan'), DB::raw('COUNT(*) as jumlah'))
             ->where('cabang_id', $cabangId)
             ->whereYear('created_at', now()->year)
@@ -58,7 +73,7 @@ class DashboardController extends Controller
             $chart_data[] = $chartData[$i] ?? 0;
         }
         
-        // 5. Menentukan layanan favorit di cabang ini
+        // Layanan favorit (tidak diubah)
         $layananFavorit = BuatOrder::where('cabang_id', $cabangId)
             ->whereNotNull('layanan')
             ->get('layanan')
@@ -71,8 +86,7 @@ class DashboardController extends Controller
             ->keys()
             ->first() ?? 'Belum ada';
 
-
-        // 6. Kirim semua data ke view
+        // Kirim semua data ke view
         return view('admin.dashboard', compact(
             'pendapatan_tahun_ini',
             'pendapatan_bulan_ini',

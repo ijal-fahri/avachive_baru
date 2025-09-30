@@ -5,43 +5,59 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Cabang;
 use App\Models\BuatOrder;
-use App\Models\TambahPelanggan;
-use App\Models\User; // <-- DITAMBAHKAN
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <-- DITAMBAHKAN
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class OwnerCabangController extends Controller
 {
+    /**
+     * Menyimpan cabang baru ke database.
+     */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'nama_cabang' => 'required|string|max:255|unique:cabangs',
-            'alamat' => 'nullable|string',
+        $validator = Validator::make($request->all(), [
+            'nama_cabang' => 'required|string|max:255|unique:cabangs,nama_cabang',
+            'alamat' => 'required|string',
+            'no_whatsapp' => 'nullable|string|max:20', // Validasi untuk WhatsApp
         ]);
 
-        Cabang::create($validatedData);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()->with('error', 'Gagal menambahkan cabang, periksa kembali isian Anda.');
+        }
 
-        return redirect()->route('owner.laporan.index')->with('success', 'Cabang baru berhasil ditambahkan!');
+        Cabang::create($validator->validated());
+
+        return redirect()->route('owner.laporan.index')->with('success', 'Cabang baru berhasil ditambahkan.');
     }
 
+    /**
+     * Mengambil data detail cabang untuk ditampilkan (AJAX).
+     */
     public function show(Cabang $cabang)
     {
-        // Fungsi ini tetap sama
         return response()->json($cabang);
     }
 
+    /**
+     * Memperbarui data cabang di database.
+     */
     public function update(Request $request, Cabang $cabang)
     {
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama_cabang' => 'required|string|max:255|unique:cabangs,nama_cabang,' . $cabang->id,
-            'alamat' => 'nullable|string',
+            'alamat' => 'required|string',
+            'no_whatsapp' => 'nullable|string|max:20', // Validasi untuk WhatsApp
         ]);
 
-        $cabang->update($validatedData);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()->with('error', 'Gagal memperbarui cabang.');
+        }
 
-        // Menggunakan response JSON agar lebih konsisten dengan alur modal
-        return redirect()->route('owner.laporan.index')->with('success', 'Data cabang berhasil diperbarui!');
+        $cabang->update($validator->validated());
+
+        return redirect()->route('owner.laporan.index')->with('success', 'Data cabang berhasil diperbarui.');
     }
 
     /**
@@ -66,7 +82,7 @@ class OwnerCabangController extends Controller
 
         } catch (\Exception $e) {
             // Jika terjadi error selama proses, kirim pesan gagal
-            return back()->with('error', 'Gagal menghapus cabang karena terjadi kesalahan.');
+            return back()->with('error', 'Gagal menghapus cabang karena terjadi kesalahan teknis.');
         }
     }
 }

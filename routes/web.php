@@ -37,7 +37,10 @@ use App\Http\Controllers\driver\DriverPengaturanController;
 use App\Http\Controllers\driver\DriverRiwayatController;
 
 // Pelanggan Controllers
-use App\Http\Controllers\pelanggan\HomePelangganController;
+use App\Http\Controllers\pelanggan\PelangganHomeController;
+use App\Http\Controllers\pelanggan\PelangganRiwayatOrderController;
+use App\Http\Controllers\pelanggan\PelangganPengaturanController;
+use App\Http\Controllers\pelanggan\PelangganBantuanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,13 +59,6 @@ require __DIR__.'/auth.php';
 
 // --- SEMUA ROUTE YANG MEMBUTUHKAN LOGIN ---
 Route::middleware('auth')->group(function () {
-
-    // Rute Profile (umum untuk semua user)
-    // Catatan: Anda belum mendefinisikan ProfileController umum, ini mungkin menyebabkan error.
-    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     
     // --- GRUP ROUTE UNTUK ADMIN ---
     Route::middleware(['admin', EnsureCabangIsSelected::class])->prefix('admin')->group(function () {
@@ -107,6 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat_order', [KasirRiwayatOrderController::class, 'index'])->name('kasir.riwayatorder.index');
         Route::post('/data_order/{id}/bayar', [KasirBuatOrderController::class, 'bayar'])->name('kasir.dataorder.bayar');
         Route::get('/riwayat_order/{order}/cetak', [KasirController::class, 'cetakRiwayatOrder'])->name('kasir.riwayatorder.cetak');
+        Route::post('/kasir/layanan-baru-seen', [KasirController::class, 'layananBaruSeen'])->name('kasir.layananBaruSeen');
     });
 
 
@@ -120,9 +117,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengiriman/{id}/update-status', [DriverController::class, 'orderSelesai'])->name('driver.order.update-status');
     });
 
-    // route untuk pelanggan 
-    Route::middleware(['auth', 'pelanggan'])->prefix('pelanggan')->group(function () {
-    Route::get('/home', [HomePelangganController::class, 'index'])->name('pelanggan.home');
+   // --- GRUP ROUTE UNTUK PELANGGAN ---
+Route::middleware(['auth', 'pelanggan'])->prefix('pelanggan')->group(function () {
+    Route::get('/home', [PelangganHomeController::class, 'index'])->name('pelanggan.home');
+    Route::get('/order/detail/{id}', [PelangganHomeController::class, 'orderDetail'])->name('pelanggan.order.detail');
+    
+    // Route Riwayat Order (satu saja, gunakan yang kedua sebagai basis tapi perbaiki path)
+    Route::get('/riwayat_order', [PelangganRiwayatOrderController::class, 'index'])->name('pelanggan.riwayat_order');
+    
+    // Route Pengaturan (satu saja, gunakan yang pertama sebagai basis)
+    Route::get('/pengaturan', [PelangganPengaturanController::class, 'index'])->name('pelanggan.pengaturan');
+    Route::put('/pengaturan/{id}', [PelangganPengaturanController::class, 'update'])->name('pelanggan.pengaturan.update');
+    
+    Route::get('/bantuan', [PelangganBantuanController::class, 'index'])->name('pelanggan.bantuan');
+    
     // Tambahkan route lain khusus pelanggan di sini
 });
 
